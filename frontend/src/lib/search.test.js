@@ -1,0 +1,89 @@
+import { describe, it, expect } from 'vitest';
+import { filterByText, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
+
+// Tiny invented gyms, just for these tests.
+const flex = { id: 1, name: 'Flex Gym', description: 'Weights and cardio', priceKsh: 3000, featured: false, lat: -1.29, lng: 36.78 };
+const yoga = { id: 2, name: 'Calm Studio', description: 'Flexible yoga classes', priceKsh: 2000, featured: true, lat: -1.3, lng: 36.8 };
+const box = { id: 3, name: 'Iron Box', description: 'Boxing and strength', priceKsh: 2500, featured: false, lat: -1.28, lng: 36.77 };
+const all = [flex, yoga, box];
+
+describe('filterByText', () => {
+  it('finds a gym by name, ignoring upper/lower case', () => {
+    expect(filterByText(all, 'FLEX GYM')).toEqual([flex]);
+  });
+
+  it('finds a gym by description', () => {
+    expect(filterByText(all, 'boxing')).toEqual([box]);
+  });
+
+  it('matches part of a word, in the original order', () => {
+    // "flex" is inside "Flex Gym" (name) and "Flexible" (description)
+    expect(filterByText(all, 'flex')).toEqual([flex, yoga]);
+  });
+
+  it('returns everything for an empty or spaces-only query', () => {
+    expect(filterByText(all, '')).toEqual(all);
+    expect(filterByText(all, '   ')).toEqual(all);
+  });
+
+  it('returns an empty list when nothing matches', () => {
+    expect(filterByText(all, 'swimming')).toEqual([]);
+  });
+
+  it('does not change the list it was given', () => {
+    const copy = [...all];
+    filterByText(all, 'flex');
+    expect(all).toEqual(copy);
+  });
+});
+
+describe('sortByDistance', () => {
+  const origin = { lat: -1.29, lng: 36.78 }; // exactly at Flex Gym
+
+  it('puts the nearest gym first and adds distanceKm', () => {
+    const result = sortByDistance([yoga, box, flex], origin);
+    expect(result.map((g) => g.id)).toEqual([1, 3, 2]);
+    expect(result[0].distanceKm).toBe(0);
+    expect(result[1].distanceKm).toBeGreaterThan(0);
+  });
+
+  it('keeps the original data order when distances are equal', () => {
+    const a = { ...flex, id: 10, name: 'Zed' };
+    const b = { ...flex, id: 11, name: 'Alpha' };
+    const c = { ...flex, id: 12, name: 'Mid' };
+    expect(sortByDistance([a, b, c], origin).map((g) => g.id)).toEqual([10, 11, 12]);
+    expect(sortByDistance([c, b, a], origin).map((g) => g.id)).toEqual([12, 11, 10]);
+  });
+
+  it('keeps the original order when the ZIP is missing (no origin)', () => {
+    expect(sortByDistance([yoga, box, flex], null).map((g) => g.id)).toEqual([2, 3, 1]);
+  });
+
+  it('puts a gym with no coordinates last', () => {
+    const lost = { id: 9, name: 'No Map', priceKsh: 1 };
+    expect(sortByDistance([lost, yoga, flex], origin).map((g) => g.id)).toEqual([1, 2, 9]);
+  });
+
+  it('returns an empty list for an empty list', () => {
+    expect(sortByDistance([], origin)).toEqual([]);
+  });
+
+  it('does not change the list it was given', () => {
+    const input = [yoga, box, flex];
+    sortByDistance(input, origin);
+    expect(input.map((g) => g.id)).toEqual([2, 3, 1]);
+  });
+});
+
+describe('sortByCheapest', () => {
+  it('puts the lowest price first and keeps data order for equal prices', () => {
+    const same = { ...box, id: 4 };
+    expect(sortByCheapest([flex, box, same, yoga]).map((g) => g.id)).toEqual([2, 3, 4, 1]);
+  });
+});
+
+describe('sortByFeatured', () => {
+  it('puts featured gyms first and keeps data order inside each group', () => {
+    expect(sortByFeatured([flex, box, yoga]).map((g) => g.id)).toEqual([2, 1, 3]);
+  });
+});
