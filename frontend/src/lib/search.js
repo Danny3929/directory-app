@@ -1,6 +1,6 @@
 // Plain search and sort functions for the gym list. No React in here.
 // None of them change the list they are given: each returns a new array.
-// Array.prototype.sort is stable, so gyms that tie keep their original data order.
+// Array.prototype.sort is stable, so in the price and featured sorts, ties keep their data order.
 
 import { distanceKm } from './geo.js';
 
@@ -14,7 +14,8 @@ export function filterByText(listings, query) {
   );
 }
 
-// Nearest first. origin is { lat, lng } (from a ZIP); null means "ZIP not found",
+// Nearest first; equal distances go A to Z by name (Dan's rule).
+// origin is { lat, lng } (from a ZIP); null means "ZIP not found",
 // so we leave the order alone. Gyms with no coordinates go last.
 export function sortByDistance(listings, origin) {
   if (!origin) return [...listings];
@@ -26,7 +27,10 @@ export function sortByDistance(listings, origin) {
         : Infinity,
   }));
   return withDistance.sort((a, b) => {
-    if (a.distanceKm === b.distanceKm) return 0; // also true for Infinity vs Infinity
+    if (a.distanceKm === b.distanceKm) {
+      // Tie (also Infinity vs Infinity): A to Z, ignoring upper/lower case.
+      return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'en', { sensitivity: 'base' });
+    }
     return a.distanceKm < b.distanceKm ? -1 : 1;
   });
 }

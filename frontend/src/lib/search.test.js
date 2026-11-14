@@ -47,12 +47,12 @@ describe('sortByDistance', () => {
     expect(result[1].distanceKm).toBeGreaterThan(0);
   });
 
-  it('keeps the original data order when distances are equal', () => {
+  it('sorts gyms A to Z by name when distances are equal, whatever the input order', () => {
     const a = { ...flex, id: 10, name: 'Zed' };
-    const b = { ...flex, id: 11, name: 'Alpha' };
+    const b = { ...flex, id: 11, name: 'alpha' }; // lower case on purpose: A to Z ignores case
     const c = { ...flex, id: 12, name: 'Mid' };
-    expect(sortByDistance([a, b, c], origin).map((g) => g.id)).toEqual([10, 11, 12]);
-    expect(sortByDistance([c, b, a], origin).map((g) => g.id)).toEqual([12, 11, 10]);
+    expect(sortByDistance([a, b, c], origin).map((g) => g.id)).toEqual([11, 12, 10]);
+    expect(sortByDistance([c, a, b], origin).map((g) => g.id)).toEqual([11, 12, 10]);
   });
 
   it('keeps the original order when the ZIP is missing (no origin)', () => {
