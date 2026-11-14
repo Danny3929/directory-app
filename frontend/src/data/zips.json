@@ -1,0 +1,68 @@
+[
+  {
+    "zip": "00100",
+    "label": "Nairobi CBD",
+    "lat": -1.2864,
+    "lng": 36.8172
+  },
+  {
+    "zip": "00200",
+    "label": "City Square",
+    "lat": -1.2921,
+    "lng": 36.8219
+  },
+  {
+    "zip": "00800",
+    "label": "Westlands",
+    "lat": -1.268,
+    "lng": 36.811
+  },
+  {
+    "zip": "00600",
+    "label": "Ngara",
+    "lat": -1.275,
+    "lng": 36.827
+  },
+  {
+    "zip": "00500",
+    "label": "Industrial Area",
+    "lat": -1.31,
+    "lng": 36.85
+  },
+  {
+    "zip": "00619",
+    "label": "Kilimani",
+    "lat": -1.2897,
+    "lng": 36.787
+  },
+  {
+    "zip": "00605",
+    "label": "Kileleshwa",
+    "lat": -1.276,
+    "lng": 36.779
+  },
+  {
+    "zip": "00603",
+    "label": "Lavington",
+    "lat": -1.28,
+    "lng": 36.769
+  },
+  {
+    "zip": "00202",
+    "label": "Upper Hill",
+    "lat": -1.298,
+    "lng": 36.816
+  },
+  {
+    "zip": "00502",
+    "label": "Karen",
+    "lat": -1.319,
+    "lng": 36.711
+  },
+  {
+    "zip": "00621",
+    "label": "Gigiri",
+    "lat": -1.23,
+    "lng": 36.803
+  }
+]

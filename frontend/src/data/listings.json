@@ -1,0 +1,722 @@
+[
+  {
+    "id": 1,
+    "name": "Flexline Fitness",
+    "description": "Flexline Fitness in Kilimani. Group classes all week, with beginners welcome.",
+    "tags": [
+      "classes",
+      "beginner"
+    ],
+    "address": "17 Argwings Kodhek Rd",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 5000,
+    "featured": false,
+    "lat": -1.2885,
+    "lng": 36.7852
+  },
+  {
+    "id": 2,
+    "name": "Sunrise Iron Works",
+    "description": "Sunrise Iron Works in Kilimani. Yoga and pilates in a quiet studio.",
+    "tags": [
+      "yoga",
+      "pilates"
+    ],
+    "address": "24 Wood Ave",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 8500,
+    "featured": true,
+    "lat": -1.2918,
+    "lng": 36.7879
+  },
+  {
+    "id": 3,
+    "name": "Kilimani Core Club",
+    "description": "Kilimani Core Club in Kilimani. Open-air training area plus a small indoor gym.",
+    "tags": [
+      "outdoor",
+      "weights"
+    ],
+    "address": "31 Ngong Rd",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 4500,
+    "featured": false,
+    "lat": -1.2869,
+    "lng": 36.7891
+  },
+  {
+    "id": 4,
+    "name": "Pulse Yard Gym",
+    "description": "Pulse Yard Gym in Kilimani. Early opening, ideal before work, with personal trainers.",
+    "tags": [
+      "personal-training",
+      "early"
+    ],
+    "address": "38 Lenana Rd",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 8000,
+    "featured": false,
+    "lat": -1.2906,
+    "lng": 36.7843
+  },
+  {
+    "id": 5,
+    "name": "Mara Strength Lab",
+    "description": "Mara Strength Lab in Kilimani. Free weights, racks and a calm floor for lifters.",
+    "tags": [
+      "weights",
+      "strength"
+    ],
+    "address": "45 Kindaruma Rd",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 4000,
+    "featured": false,
+    "lat": -1.2894,
+    "lng": 36.7901
+  },
+  {
+    "id": 6,
+    "name": "Tempo Studio",
+    "description": "Tempo Studio in Kilimani. Cardio machines, treadmills and a small stretching zone.",
+    "tags": [
+      "cardio",
+      "stretching"
+    ],
+    "address": "52 Argwings Kodhek Rd",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 7500,
+    "featured": false,
+    "lat": -1.2928,
+    "lng": 36.7864
+  },
+  {
+    "id": 7,
+    "name": "Baobab Barbell",
+    "description": "Baobab Barbell in Kilimani. Boxing bags, coached sessions and strength circuits.",
+    "tags": [
+      "boxing",
+      "strength"
+    ],
+    "address": "59 Wood Ave",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 3500,
+    "featured": false,
+    "lat": -1.2878,
+    "lng": 36.7884
+  },
+  {
+    "id": 8,
+    "name": "Zuri Move Space",
+    "description": "Zuri Move Space in Kilimani. Spin classes with loud music and showers on site.",
+    "tags": [
+      "spin",
+      "classes"
+    ],
+    "address": "66 Ngong Rd",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 7000,
+    "featured": true,
+    "lat": -1.2911,
+    "lng": 36.7895
+  },
+  {
+    "id": 9,
+    "name": "Acacia Athletics",
+    "description": "Acacia Athletics in Kilimani. Women-friendly gym with a quiet morning session.",
+    "tags": [
+      "womens",
+      "classes"
+    ],
+    "address": "73 Lenana Rd",
+    "area": "Kilimani",
+    "city": "Nairobi",
+    "priceKsh": 3000,
+    "featured": false,
+    "lat": -1.2873,
+    "lng": 36.7848
+  },
+  {
+    "id": 10,
+    "name": "Ridge Fitness Hub",
+    "description": "Ridge Fitness Hub in Kileleshwa. Group classes all week, with beginners welcome.",
+    "tags": [
+      "classes",
+      "beginner"
+    ],
+    "address": "80 Othaya Rd",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 6500,
+    "featured": false,
+    "lat": -1.2748,
+    "lng": 36.7772
+  },
+  {
+    "id": 11,
+    "name": "Kileleshwa Power House",
+    "description": "Kileleshwa Power House in Kileleshwa. Yoga and pilates in a quiet studio.",
+    "tags": [
+      "yoga",
+      "pilates"
+    ],
+    "address": "87 Mandera Rd",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 2500,
+    "featured": false,
+    "lat": -1.2781,
+    "lng": 36.7799
+  },
+  {
+    "id": 12,
+    "name": "Nuru Wellness Gym",
+    "description": "Nuru Wellness Gym in Kileleshwa. Open-air training area plus a small indoor gym.",
+    "tags": [
+      "outdoor",
+      "weights"
+    ],
+    "address": "94 Githunguri Rd",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 6000,
+    "featured": false,
+    "lat": -1.2732,
+    "lng": 36.7811
+  },
+  {
+    "id": 13,
+    "name": "Swift Motion Club",
+    "description": "Swift Motion Club in Kileleshwa. Early opening, ideal before work, with personal trainers.",
+    "tags": [
+      "personal-training",
+      "early"
+    ],
+    "address": "11 Kileleshwa Dr",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 2000,
+    "featured": false,
+    "lat": -1.2769,
+    "lng": 36.7763
+  },
+  {
+    "id": 14,
+    "name": "Green Door Fitness",
+    "description": "Green Door Fitness in Kileleshwa. Free weights, racks and a calm floor for lifters.",
+    "tags": [
+      "weights",
+      "strength"
+    ],
+    "address": "18 Muthithi Rd",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 5500,
+    "featured": true,
+    "lat": -1.2757,
+    "lng": 36.7821
+  },
+  {
+    "id": 15,
+    "name": "Ironbird Gym",
+    "description": "Ironbird Gym in Kileleshwa. Cardio machines, treadmills and a small stretching zone.",
+    "tags": [
+      "cardio",
+      "stretching"
+    ],
+    "address": "25 Othaya Rd",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 1500,
+    "featured": false,
+    "lat": -1.2791,
+    "lng": 36.7784
+  },
+  {
+    "id": 16,
+    "name": "Cedar Court Studio",
+    "description": "Cedar Court Studio in Kileleshwa. Boxing bags, coached sessions and strength circuits.",
+    "tags": [
+      "boxing",
+      "strength"
+    ],
+    "address": "32 Mandera Rd",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 5000,
+    "featured": false,
+    "lat": -1.2741,
+    "lng": 36.7804
+  },
+  {
+    "id": 17,
+    "name": "Mtaani Muscle",
+    "description": "Mtaani Muscle in Kileleshwa. Spin classes with loud music and showers on site.",
+    "tags": [
+      "spin",
+      "classes"
+    ],
+    "address": "39 Githunguri Rd",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 8500,
+    "featured": false,
+    "lat": -1.2774,
+    "lng": 36.7815
+  },
+  {
+    "id": 18,
+    "name": "Bluegum Training",
+    "description": "Bluegum Training in Kileleshwa. Women-friendly gym with a quiet morning session.",
+    "tags": [
+      "womens",
+      "classes"
+    ],
+    "address": "46 Kileleshwa Dr",
+    "area": "Kileleshwa",
+    "city": "Nairobi",
+    "priceKsh": 4500,
+    "featured": false,
+    "lat": -1.2736,
+    "lng": 36.7768
+  },
+  {
+    "id": 19,
+    "name": "Lavington Peak Gym",
+    "description": "Lavington Peak Gym in Lavington. Group classes all week, with beginners welcome.",
+    "tags": [
+      "classes",
+      "beginner"
+    ],
+    "address": "53 James Gichuru Rd",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 8000,
+    "featured": false,
+    "lat": -1.2788,
+    "lng": 36.7672
+  },
+  {
+    "id": 20,
+    "name": "Oasis Fit Club",
+    "description": "Oasis Fit Club in Lavington. Yoga and pilates in a quiet studio.",
+    "tags": [
+      "yoga",
+      "pilates"
+    ],
+    "address": "60 Muthangari Dr",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 4000,
+    "featured": false,
+    "lat": -1.2821,
+    "lng": 36.7699
+  },
+  {
+    "id": 21,
+    "name": "Kito Crossfit Box",
+    "description": "Kito Crossfit Box in Lavington. Open-air training area plus a small indoor gym.",
+    "tags": [
+      "outdoor",
+      "weights"
+    ],
+    "address": "67 Gitanga Rd",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 7500,
+    "featured": true,
+    "lat": -1.2772,
+    "lng": 36.7711
+  },
+  {
+    "id": 22,
+    "name": "Harambee Health Club",
+    "description": "Harambee Health Club in Lavington. Early opening, ideal before work, with personal trainers.",
+    "tags": [
+      "personal-training",
+      "early"
+    ],
+    "address": "74 Brookside Dr",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 3500,
+    "featured": false,
+    "lat": -1.2809,
+    "lng": 36.7663
+  },
+  {
+    "id": 23,
+    "name": "Stride and Stretch",
+    "description": "Stride and Stretch in Lavington. Free weights, racks and a calm floor for lifters.",
+    "tags": [
+      "weights",
+      "strength"
+    ],
+    "address": "81 Valley Arcade Ln",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 7000,
+    "featured": false,
+    "lat": -1.2797,
+    "lng": 36.7721
+  },
+  {
+    "id": 24,
+    "name": "Jacaranda Gym",
+    "description": "Jacaranda Gym in Lavington. Cardio machines, treadmills and a small stretching zone.",
+    "tags": [
+      "cardio",
+      "stretching"
+    ],
+    "address": "88 James Gichuru Rd",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 3000,
+    "featured": false,
+    "lat": -1.2831,
+    "lng": 36.7684
+  },
+  {
+    "id": 25,
+    "name": "Kesho Fitness",
+    "description": "Kesho Fitness in Lavington. Boxing bags, coached sessions and strength circuits.",
+    "tags": [
+      "boxing",
+      "strength"
+    ],
+    "address": "95 Muthangari Dr",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 6500,
+    "featured": false,
+    "lat": -1.2781,
+    "lng": 36.7704
+  },
+  {
+    "id": 26,
+    "name": "Valley Iron Club",
+    "description": "Valley Iron Club in Lavington. Spin classes with loud music and showers on site.",
+    "tags": [
+      "spin",
+      "classes"
+    ],
+    "address": "12 Gitanga Rd",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 2500,
+    "featured": false,
+    "lat": -1.2814,
+    "lng": 36.7715
+  },
+  {
+    "id": 27,
+    "name": "Simba Strength",
+    "description": "Simba Strength in Lavington. Women-friendly gym with a quiet morning session.",
+    "tags": [
+      "womens",
+      "classes"
+    ],
+    "address": "19 Brookside Dr",
+    "area": "Lavington",
+    "city": "Nairobi",
+    "priceKsh": 6000,
+    "featured": false,
+    "lat": -1.2776,
+    "lng": 36.7668
+  },
+  {
+    "id": 28,
+    "name": "Skyline Gym Westlands",
+    "description": "Skyline Gym Westlands in Westlands. Group classes all week, with beginners welcome.",
+    "tags": [
+      "classes",
+      "beginner"
+    ],
+    "address": "26 Waiyaki Way",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 2000,
+    "featured": false,
+    "lat": -1.2668,
+    "lng": 36.8092
+  },
+  {
+    "id": 29,
+    "name": "Rhapta Fit Studio",
+    "description": "Rhapta Fit Studio in Westlands. Yoga and pilates in a quiet studio.",
+    "tags": [
+      "yoga",
+      "pilates"
+    ],
+    "address": "33 Ring Rd Westlands",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 5500,
+    "featured": true,
+    "lat": -1.2701,
+    "lng": 36.8119
+  },
+  {
+    "id": 30,
+    "name": "Metro Muscle",
+    "description": "Metro Muscle in Westlands. Open-air training area plus a small indoor gym.",
+    "tags": [
+      "outdoor",
+      "weights"
+    ],
+    "address": "40 Mpaka Rd",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 1500,
+    "featured": false,
+    "lat": -1.2652,
+    "lng": 36.8131
+  },
+  {
+    "id": 31,
+    "name": "Waiyaki Wellness",
+    "description": "Waiyaki Wellness in Westlands. Early opening, ideal before work, with personal trainers.",
+    "tags": [
+      "personal-training",
+      "early"
+    ],
+    "address": "47 Woodvale Grove",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 5000,
+    "featured": false,
+    "lat": -1.2689,
+    "lng": 36.8083
+  },
+  {
+    "id": 32,
+    "name": "Neon Pulse Club",
+    "description": "Neon Pulse Club in Westlands. Free weights, racks and a calm floor for lifters.",
+    "tags": [
+      "weights",
+      "strength"
+    ],
+    "address": "54 Rhapta Rd",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 8500,
+    "featured": false,
+    "lat": -1.2677,
+    "lng": 36.8141
+  },
+  {
+    "id": 33,
+    "name": "Twiga Training Hall",
+    "description": "Twiga Training Hall in Westlands. Cardio machines, treadmills and a small stretching zone.",
+    "tags": [
+      "cardio",
+      "stretching"
+    ],
+    "address": "61 Waiyaki Way",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 4500,
+    "featured": false,
+    "lat": -1.2711,
+    "lng": 36.8104
+  },
+  {
+    "id": 34,
+    "name": "Sarit Side Fitness",
+    "description": "Sarit Side Fitness in Westlands. Boxing bags, coached sessions and strength circuits.",
+    "tags": [
+      "boxing",
+      "strength"
+    ],
+    "address": "68 Ring Rd Westlands",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 8000,
+    "featured": false,
+    "lat": -1.2661,
+    "lng": 36.8124
+  },
+  {
+    "id": 35,
+    "name": "Urban Orbit Gym",
+    "description": "Urban Orbit Gym in Westlands. Spin classes with loud music and showers on site.",
+    "tags": [
+      "spin",
+      "classes"
+    ],
+    "address": "75 Mpaka Rd",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 4000,
+    "featured": false,
+    "lat": -1.2694,
+    "lng": 36.8135
+  },
+  {
+    "id": 36,
+    "name": "Westgate Warriors",
+    "description": "Westgate Warriors in Westlands. Women-friendly gym with a quiet morning session.",
+    "tags": [
+      "womens",
+      "classes"
+    ],
+    "address": "82 Woodvale Grove",
+    "area": "Westlands",
+    "city": "Nairobi",
+    "priceKsh": 7500,
+    "featured": true,
+    "lat": -1.2656,
+    "lng": 36.8088
+  },
+  {
+    "id": 37,
+    "name": "Upper Hill Iron Den",
+    "description": "Upper Hill Iron Den in Upper Hill. Group classes all week, with beginners welcome.",
+    "tags": [
+      "classes",
+      "beginner"
+    ],
+    "address": "89 Hospital Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 3500,
+    "featured": false,
+    "lat": -1.2968,
+    "lng": 36.8142
+  },
+  {
+    "id": 38,
+    "name": "Capital Fit Lounge",
+    "description": "Capital Fit Lounge in Upper Hill. Yoga and pilates in a quiet studio.",
+    "tags": [
+      "yoga",
+      "pilates"
+    ],
+    "address": "96 Ragati Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 7000,
+    "featured": false,
+    "lat": -1.3001,
+    "lng": 36.8169
+  },
+  {
+    "id": 39,
+    "name": "Hospital Hill Gym",
+    "description": "Hospital Hill Gym in Upper Hill. Open-air training area plus a small indoor gym.",
+    "tags": [
+      "outdoor",
+      "weights"
+    ],
+    "address": "13 Elgon Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 3000,
+    "featured": false,
+    "lat": -1.2952,
+    "lng": 36.8181
+  },
+  {
+    "id": 40,
+    "name": "Elgon Edge Fitness",
+    "description": "Elgon Edge Fitness in Upper Hill. Early opening, ideal before work, with personal trainers.",
+    "tags": [
+      "personal-training",
+      "early"
+    ],
+    "address": "20 Mara Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 6500,
+    "featured": false,
+    "lat": -1.2989,
+    "lng": 36.8133
+  },
+  {
+    "id": 41,
+    "name": "Summit Spin Studio",
+    "description": "Summit Spin Studio in Upper Hill. Free weights, racks and a calm floor for lifters.",
+    "tags": [
+      "weights",
+      "strength"
+    ],
+    "address": "27 Chyulu Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 2500,
+    "featured": true,
+    "lat": -1.2977,
+    "lng": 36.8191
+  },
+  {
+    "id": 42,
+    "name": "Chyulu Core Club",
+    "description": "Chyulu Core Club in Upper Hill. Cardio machines, treadmills and a small stretching zone.",
+    "tags": [
+      "cardio",
+      "stretching"
+    ],
+    "address": "34 Hospital Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 6000,
+    "featured": false,
+    "lat": -1.3011,
+    "lng": 36.8154
+  },
+  {
+    "id": 43,
+    "name": "Savanna Strength",
+    "description": "Savanna Strength in Upper Hill. Boxing bags, coached sessions and strength circuits.",
+    "tags": [
+      "boxing",
+      "strength"
+    ],
+    "address": "41 Ragati Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 2000,
+    "featured": false,
+    "lat": -1.2961,
+    "lng": 36.8174
+  },
+  {
+    "id": 44,
+    "name": "Ragati Rhythm Studio",
+    "description": "Ragati Rhythm Studio in Upper Hill. Spin classes with loud music and showers on site.",
+    "tags": [
+      "spin",
+      "classes"
+    ],
+    "address": "48 Elgon Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 5500,
+    "featured": false,
+    "lat": -1.2994,
+    "lng": 36.8185
+  },
+  {
+    "id": 45,
+    "name": "Tower Top Fitness",
+    "description": "Tower Top Fitness in Upper Hill. Women-friendly gym with a quiet morning session.",
+    "tags": [
+      "womens",
+      "classes"
+    ],
+    "address": "55 Mara Rd",
+    "area": "Upper Hill",
+    "city": "Nairobi",
+    "priceKsh": 1500,
+    "featured": false,
+    "lat": -1.2956,
+    "lng": 36.8138
+  }
+]
