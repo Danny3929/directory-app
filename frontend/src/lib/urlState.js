@@ -26,6 +26,14 @@ function parseTags(text) {
 const PRICE_SHAPE = /^\d{1,6}$/;
 const parsePrice = (text) => (PRICE_SHAPE.test(text ?? '') ? Number(text) : null);
 
+// ?page=3 means "Load more was pressed twice": 3 lots of 12 are showing.
+// A whole number from 1 to MAX_PAGE; anything else means page 1.
+export const MAX_PAGE = 50;
+const parsePage = (text) => {
+  const page = /^\d{1,2}$/.test(text ?? '') ? Number(text) : 1;
+  return page >= 1 && page <= MAX_PAGE ? page : 1;
+};
+
 export function parseSearch(search) {
   const params = new URLSearchParams(search);
   const sort = params.get('sort');
@@ -40,12 +48,13 @@ export function parseSearch(search) {
     tags: parseTags(params.get('tags')),
     min: parsePrice(params.get('min')),
     max: parsePrice(params.get('max')),
+    page: parsePage(params.get('page')),
   };
 }
 
 // Only choices that differ from the default go in the address, so the
 // plain page keeps a clean URL. Returns '' or a string starting with '?'.
-export function buildSearch({ q, zip, sort, saved, radius, tags, min, max }) {
+export function buildSearch({ q, zip, sort, saved, radius, tags, min, max, page }) {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (zip) params.set('zip', zip);
@@ -56,6 +65,7 @@ export function buildSearch({ q, zip, sort, saved, radius, tags, min, max }) {
   // != null keeps 0, which is a real amount.
   if (min != null) params.set('min', String(min));
   if (max != null) params.set('max', String(max));
+  if (page > 1) params.set('page', String(page));
   // URLSearchParams writes a comma as %2C; a plain comma is allowed and easier to read.
   const text = params.toString().replace(/%2C/g, ',');
   return text ? `?${text}` : '';

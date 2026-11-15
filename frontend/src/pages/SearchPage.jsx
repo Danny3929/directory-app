@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchListings, fetchZips } from '../api/listings.js';
 import { filterByText, filterByRadius, filterByTags, filterByPrice, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
 import { parseSearch, buildSearch, RADII } from '../lib/urlState.js';
@@ -10,6 +10,8 @@ import GymCard from '../components/GymCard.jsx';
 const ZIP_LENGTH = 5;
 const PRICE_DIGITS = 6;
 const SEARCH_DELAY_MS = 300;
+// Load more shows this many more gyms each time (the guide asks for 12 per page).
+const PAGE_SIZE = 12;
 
 // What the visitor typed in a price box -> a number, or null for empty.
 // Anything that is not a digit (letters, commas, spaces) is dropped, so '4,000' is 4000.
@@ -53,7 +55,9 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
     setAttempt((n) => n + 1);
   };
 
-  const update = (change) => setFilters((old) => ({ ...old, ...change }));
+  // Dan's spec: any new search choice is a new search, so it goes back to the first 12.
+  // Only Load more passes a page of its own.
+  const update = (change) => setFilters((old) => ({ ...old, page: 1, ...change }));
 
   // Debounce (Dan's spec): the box shows each letter at once (text), but the list
   // and address (filters.q) only change after SEARCH_DELAY_MS with no new letter.
@@ -61,7 +65,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   useEffect(() => {
     // Every new letter cancels the old timer (cleanup below) and starts a new one.
     const timer = setTimeout(() => {
-      setFilters((old) => (old.q === text ? old : { ...old, q: text }));
+      setFilters((old) => (old.q === text ? old : { ...old, q: text, page: 1 }));
     }, SEARCH_DELAY_MS);
     return () => clearTimeout(timer);
   }, [text]);
@@ -111,6 +115,25 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
     if (filters.sort === 'featured') return sortByFeatured(byDistance);
     return byDistance;
   }, [data.listings, filters.q, filters.sort, filters.saved, filters.radius, filters.min, filters.max, activeTags, favourites, origin]);
+
+  // Only the first page * 12 gyms are drawn; Load more raises the page by one.
+  const shown = results.slice(0, filters.page * PAGE_SIZE);
+  const hasMore = shown.length < results.length;
+
+  // After Load more, move keyboard focus to the first new gym, so keyboard and
+  // screen-reader users carry on from there instead of being left on a button.
+  const gridRef = useRef(null);
+  const focusFrom = useRef(null);
+  useEffect(() => {
+    if (focusFrom.current == null) return;
+    const links = gridRef.current?.querySelectorAll('h3 a');
+    links?.[focusFrom.current]?.focus();
+    focusFrom.current = null;
+  }, [shown.length]);
+  const loadMore = () => {
+    focusFrom.current = shown.length;
+    update({ page: filters.page + 1 });
+  };
 
   return (
     <main className="page">
@@ -346,10 +369,10 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
       {data.status === 'ready' && (results.length > 0 || goneIds.length > 0) && (
         <>
           <p className="muted" aria-live="polite">
-            {results.length} {results.length === 1 ? 'gym' : 'gyms'}
+            {hasMore ? `Showing ${shown.length} of ${results.length} gyms` : `${results.length} ${results.length === 1 ? 'gym' : 'gyms'}`}
           </p>
-          <ul className="gym-grid">
-            {results.map((gym) => (
+          <ul className="gym-grid" ref={gridRef}>
+            {shown.map((gym) => (
               <GymCard
                 key={gym.id}
                 gym={gym}
@@ -368,6 +391,13 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
               </li>
             ))}
           </ul>
+          {hasMore && (
+            <div className="load-more">
+              <button type="button" onClick={loadMore}>
+                Load more gyms
+              </button>
+            </div>
+          )}
         </>
       )}
     </main>

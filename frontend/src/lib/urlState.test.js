@@ -12,11 +12,12 @@ describe('parseSearch', () => {
       tags: [],
       min: null,
       max: null,
+      page: 1,
     });
   });
 
   it('uses empty text and the default sort when nothing is there', () => {
-    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null, tags: [], min: null, max: null });
+    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null, tags: [], min: null, max: null, page: 1 });
   });
 
   it('ignores a sort value we do not know', () => {
@@ -34,7 +35,7 @@ describe('buildSearch', () => {
   });
 
   it('round-trips, including spaces and symbols', () => {
-    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10, tags: ['boxing', 'strength'], min: 2000, max: 5000 };
+    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10, tags: ['boxing', 'strength'], min: 2000, max: 5000, page: 3 };
     expect(parseSearch(buildSearch(filters))).toEqual(filters);
   });
 });
@@ -109,5 +110,22 @@ describe('price range (Dan spec 2026-11-15: ?min=&max= in Ksh)', () => {
     expect(buildSearch({ q: '', zip: '', sort: 'featured', min: 2000, max: 5000 })).toBe('?min=2000&max=5000');
     expect(buildSearch({ q: '', zip: '', sort: 'featured', min: 0, max: null })).toBe('?min=0');
     expect(buildSearch({ q: '', zip: '', sort: 'featured', min: null, max: null })).toBe('');
+  });
+});
+
+describe('Load more page (Dan spec 2026-11-15: ?page=, a new search starts at page 1)', () => {
+  it('reads ?page= as how many lots of 12 are showing', () => {
+    expect(parseSearch('?page=3').page).toBe(3);
+  });
+
+  it('ignores a page value that is not a whole number from 1 to 50', () => {
+    for (const bad of ['0', '-1', '2.5', 'abc', '1e1', '51', '999', '']) {
+      expect(parseSearch('?page=' + bad).page).toBe(1);
+    }
+  });
+
+  it('leaves page 1 out of the address and writes the others', () => {
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', page: 1 })).toBe('');
+    expect(buildSearch({ q: 'gym', zip: '', sort: 'featured', page: 2 })).toBe('?q=gym&page=2');
   });
 });

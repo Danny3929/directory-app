@@ -91,3 +91,12 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Why it matters later: in Task 3 every search becomes a call to Django. Without the wait, typing "boxing" would send 6 requests; with it, one.
 - Tests: 4 new, 3 older ones now press Enter (168 in total). They use a fake clock (`vi.useFakeTimers`) to step 299 ms, then 1 ms more. Broke the code twice on purpose (no `clearTimeout`, so letters did not restart the wait; "Clear search" left the box full) and the tests caught both.
 - Real-browser check (`tools/scratch/typecheck.mjs`, headless Chrome): typing "boxing" 100 ms apart kept all 45 gyms while typing, then 5 gyms and `?q=boxing` about 0.3 s after the last letter. Typing 400 ms apart updated after each letter.
+
+## Slice notes: 12 per page with Load more (2026-11-15)
+- Dan's spec (question card): a visitor with 36 gyms showing who ticks Boxing goes back to the first 12, because a new filter is a new search.
+- How it works: `filters.page` says how many lots of 12 are drawn (`results.slice(0, page * 12)`). Load more adds 1. Every other change goes through `update()`, which sets `page: 1` first, so any new search choice starts again at 12. The debounced search word does the same.
+- Address: `?page=2`, `?page=3` and so on; page 1 is left out. A bad value (`?page=abc`, `0`, `2.5`, `51`) means page 1. Reloading or sharing the link shows the same number of gyms.
+- AI's fill-ins: changing the sort also goes back to 12, because the first 12 become different gyms. The count says "Showing 12 of 45 gyms" while more are hidden, and "45 gyms" once all are shown, when the button disappears. "No longer available" saved gyms are always shown, outside the 12.
+- Accessibility: after Load more, keyboard focus moves to the first new gym's link, so keyboard and screen-reader users carry on from there instead of staying on the button (which also vanishes on the last page).
+- Tests: 11 new, 3 older URL tests updated (179 in total). Broke the code twice on purpose (no reset to page 1 in `update()`; no focus move) and the tests caught both.
+- Real-browser check (`tools/scratch/loadmorecheck.mjs`, headless Chrome at 390px): 12 → 24 → 36 → 45 with `?page=2/3/4`, focus on Baobab Barbell, Harambee Health Club, Urban Orbit Gym; button gone at 45; reload kept 45; ticking Boxing gave 5 gyms and `?tags=boxing`.

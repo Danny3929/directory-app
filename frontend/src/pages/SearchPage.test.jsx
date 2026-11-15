@@ -457,3 +457,86 @@ describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overla
     expect(window.location.search).toBe('');
   });
 });
+
+describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goes back to 12)', () => {
+  // 30 gyms named Gym 01 to Gym 30, so the A to Z order is easy to check. The first 20 do boxing.
+  const many = () =>
+    Array.from({ length: 30 }, (_, i) => ({
+      ...gym(i + 1, `Gym ${String(i + 1).padStart(2, '0')}`, -1.29, 36.78, 2000),
+      tags: i < 20 ? ['boxing'] : ['yoga'],
+    }));
+  const loadMore = () => fireEvent.click(screen.getByRole('button', { name: /load more/i }));
+  beforeEach(() => fetchListings.mockResolvedValue(many()));
+
+  it('shows the first 12 and says how many there are in all', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Gym 01');
+    expect(names()).toHaveLength(12);
+    expect(names()[11]).toBe('Gym 12');
+    expect(screen.getByText('Showing 12 of 30 gyms')).toBeTruthy();
+  });
+
+  it('Load more adds the next 12, writes ?page=2 and moves focus to the first new gym', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Gym 01');
+    loadMore();
+    expect(names()).toHaveLength(24);
+    expect(window.location.search).toBe('?page=2');
+    expect(document.activeElement.textContent).toBe('Gym 13');
+  });
+
+  it('hides Load more once every gym is showing', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Gym 01');
+    loadMore();
+    loadMore();
+    expect(names()).toHaveLength(30);
+    expect(screen.getByText('30 gyms')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /load more/i })).toBeNull();
+  });
+
+  it('Dan’s case: 36 showing, then tick Boxing, goes back to the first 12', async () => {
+    window.history.replaceState(null, '', '/?page=3');
+    render(<SearchPage />);
+    await screen.findByText('Gym 01');
+    expect(names()).toHaveLength(30);
+    fireEvent.click(screen.getByRole('button', { name: /boxing/i }));
+    expect(names()).toHaveLength(12);
+    expect(screen.getByText('Showing 12 of 20 gyms')).toBeTruthy();
+    expect(window.location.search).toBe('?tags=boxing');
+  });
+
+  it('a new search word also goes back to 12, after the 0.3 s pause', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    window.history.replaceState(null, '', '/?page=2');
+    render(<SearchPage />);
+    await screen.findByText('Gym 01');
+    expect(names()).toHaveLength(24);
+    type(/search gyms/i, 'gym');
+    await wait(300);
+    expect(names()).toHaveLength(12);
+    expect(window.location.search).toBe('?q=gym');
+  });
+
+  it('a shared ?page=2 link opens with 24 gyms', async () => {
+    window.history.replaceState(null, '', '/?page=2');
+    render(<SearchPage />);
+    await screen.findByText('Gym 01');
+    expect(names()).toHaveLength(24);
+    expect(screen.getByText('Showing 24 of 30 gyms')).toBeTruthy();
+  });
+
+  it('a bad ?page= value shows the first 12', async () => {
+    window.history.replaceState(null, '', '/?page=abc');
+    render(<SearchPage />);
+    await screen.findByText('Gym 01');
+    expect(names()).toHaveLength(12);
+  });
+
+  it('no Load more button when 12 or fewer gyms match', async () => {
+    fetchListings.mockResolvedValue(structuredClone(gyms));
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(screen.queryByRole('button', { name: /load more/i })).toBeNull();
+  });
+});
