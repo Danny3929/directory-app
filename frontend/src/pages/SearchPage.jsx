@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { fetchListings, fetchZips } from '../api/listings.js';
 import { filterByText, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
 import { parseSearch, buildSearch } from '../lib/urlState.js';
+import { gymImage, tagCounts } from '../lib/gymImage.js';
 import GymCard from '../components/GymCard.jsx';
 
 const ZIP_LENGTH = 5;
@@ -65,9 +66,19 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
     return byDistance;
   }, [data.listings, filters.q, filters.sort, filters.saved, favourites, origin]);
 
+  // How many gyms have each tag, for the "most popular tag" photo rule.
+  const counts = useMemo(() => tagCounts(data.listings), [data.listings]);
+
   return (
     <main className="page">
-      <h1>Find a gym in Nairobi</h1>
+      <header className="hero">
+        {/* Decorative: the headline says it all, so the photo has empty alt text. */}
+        <img className="hero-photo" src={`${import.meta.env.BASE_URL}images/hero.webp`} alt="" width="1600" height="640" fetchPriority="high" />
+        <div className="hero-text">
+          <h1>Find a gym in Nairobi</h1>
+          <p>Weights, classes, boxing and more, near you.</p>
+        </div>
+      </header>
 
       <form className="controls" onSubmit={(e) => e.preventDefault()}>
         <div className="field">
@@ -179,6 +190,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
               <GymCard
                 key={gym.id}
                 gym={gym}
+                image={gymImage(gym, { query: filters.q, counts })}
                 isFavourite={favourites.includes(gym.id)}
                 onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(gym.id))}
               />

@@ -4,6 +4,7 @@
 // loading and error states now, and later we only swap these functions.
 import listings from '../data/listings.json';
 import zips from '../data/zips.json';
+import { tagCounts } from '../lib/gymImage.js';
 
 const DEFAULT_DELAY_MS = 500;
 
@@ -33,6 +34,15 @@ export function fetchZips(options = {}) {
   return fakeRequest(zips, {
     ...options,
     errorMessage: 'Could not load ZIP codes. Please try again.',
+  });
+}
+
+// How many gyms have each tag, e.g. { classes: 15, yoga: 5 }. The detail page
+// needs it to pick the same photo as the card. In Task 3 Django counts these.
+export function fetchTagCounts(options = {}) {
+  return fakeRequest(tagCounts(listings), {
+    ...options,
+    errorMessage: 'Could not load tag counts.',
   });
 }
 

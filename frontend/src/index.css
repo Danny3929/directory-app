@@ -21,6 +21,9 @@
   --color-border: #9ca3af;
   --color-accent: #1d4ed8;
   --color-accent-text: #ffffff;
+  /* Search page top band: dark shade over the photo, white text (about 9:1 contrast). */
+  --color-hero-shade: rgba(17, 24, 39, 0.78);
+  --color-hero-text: #ffffff;
   --color-warn: #78350f;
   --color-warn-bg: #fffbeb;
   --color-danger: #991b1b;

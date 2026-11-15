@@ -119,6 +119,86 @@ button {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+  overflow: hidden; /* keeps the photo inside the rounded corners */
+}
+
+/* Photo fills the top of the card, edge to edge, always 16:9. */
+.card-photo {
+  display: block;
+  width: calc(100% + 2 * var(--space-md));
+  max-width: none;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin: calc(-1 * var(--space-md)) calc(-1 * var(--space-md)) var(--space-md);
+  background: var(--color-border);
+}
+
+.detail-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin: var(--space-sm) 0 var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+}
+
+/* Search page top band: photo with the headline over it. */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 220px;
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-hero-shade);
+}
+
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% 30%;
+}
+
+/* Dark shade on the left so white text stays readable over the bright photo. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--color-hero-shade) 0%, var(--color-hero-shade) 50%, transparent 90%);
+}
+
+.hero-text {
+  position: relative;
+  z-index: 1;
+  max-width: 28rem;
+  padding: var(--space-lg);
+  color: var(--color-hero-text);
+}
+
+.hero-text h1 {
+  margin: 0 0 var(--space-sm);
+}
+
+.hero-text p {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+@media (max-width: 480px) {
+  .hero {
+    min-height: 180px;
+  }
+
+  .hero::after {
+    background: var(--color-hero-shade);
+  }
 }
 
 .card p {

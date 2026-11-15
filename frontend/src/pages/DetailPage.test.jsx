@@ -2,10 +2,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import DetailPage from './DetailPage.jsx';
-import { fetchListing } from '../api/listings.js';
+import { fetchListing, fetchTagCounts } from '../api/listings.js';
 
 vi.mock('../api/listings.js', () => ({
   fetchListing: vi.fn(),
+  fetchTagCounts: vi.fn(),
 }));
 
 const gym = {
@@ -16,9 +17,35 @@ const gym = {
 
 beforeEach(() => {
   fetchListing.mockReset().mockResolvedValue(structuredClone(gym));
+  fetchTagCounts.mockReset().mockResolvedValue({ strength: 10, boxing: 5 });
+  window.history.replaceState(null, '', '/');
 });
 
 afterEach(cleanup);
+
+describe('DetailPage photo', () => {
+  it('shows the most popular tag photo (strength) with alt text', async () => {
+    render(<DetailPage gymId={3} />);
+    await screen.findByText('Baobab Barbell');
+    const img = await screen.findByRole('img', { name: /lat machine/i });
+    expect(img.getAttribute('src')).toMatch(/strength\.webp$/);
+  });
+
+  it('shows the boxing photo when the search in the address says boxing, like the card did', async () => {
+    window.history.replaceState(null, '', '/?q=boxing#/gym/3');
+    render(<DetailPage gymId={3} />);
+    const img = await screen.findByRole('img', { name: /sparring/i });
+    expect(img.getAttribute('src')).toMatch(/boxing\.webp$/);
+  });
+
+  it('still shows the gym and a photo when the tag counts fail', async () => {
+    fetchTagCounts.mockRejectedValue(new Error('down'));
+    render(<DetailPage gymId={3} />);
+    await screen.findByText('Baobab Barbell');
+    // No counts: boxing and strength tie, so A to Z gives boxing.
+    expect(screen.getByRole('img').getAttribute('src')).toMatch(/boxing\.webp$/);
+  });
+});
 
 describe('DetailPage', () => {
   it('shows a loading message, then the gym', async () => {

@@ -3,11 +3,16 @@ import FavouriteButton from './FavouriteButton.jsx';
 
 // One gym in the results list. It only shows what it is given.
 // distanceKm is there only when the visitor entered a known ZIP.
-export default function GymCard({ gym, isFavourite = false, onToggleFavourite }) {
+// image is { src, alt } from gymImage(); the card works without it.
+export default function GymCard({ gym, image, isFavourite = false, onToggleFavourite }) {
   const hasDistance = Number.isFinite(gym.distanceKm);
 
   return (
     <li className="card">
+      {image && (
+        // width/height reserve the space before the photo loads, so the list does not jump.
+        <img className="card-photo" src={image.src} alt={image.alt} width="960" height="540" loading="lazy" decoding="async" />
+      )}
       <div className="card-top">
         <h3>
           <a href={gymPath(gym.id)}>{gym.name}</a>

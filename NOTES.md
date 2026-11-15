@@ -44,3 +44,12 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Layout checked at a true 390px width: no sideways scroll on the saved view or the detail page.
 - Not tested: a screen reader (only the roles and `aria-pressed` are tested), a real phone, and the gym-gone card on screen (only in tests).
 - Tooling slip: headless Chrome `--window-size=390` crops the picture because Chrome has a minimum window width. Use device emulation instead.
+
+## Slice notes: gym photos (2026-11-15)
+- What shipped: `gymImage.js` (photo by Dan's tag rule), a photo on every card (lazy, 16:9, width/height set so the list does not jump), a larger photo on the detail page, and a top band on the search page with the headline over the hero photo.
+- New fake API call `fetchTagCounts()`: the detail page only fetches one gym, so it needs the tag counts to pick the same photo as the card. If it fails, the page still works (ties go A to Z). Task 3 swaps it for a Django count.
+- Image weight: 10 WebP files, about 310 KB in all (hero 27 KB, cards 18-53 KB each). Cards load lazily, so a phone first loads the hero and the first few cards only.
+- Checked at desktop 1280px and true 390px (device emulation): no sideways scroll, no broken images.
+- What the AI got wrong: (1) the first hero crop cut off the lifter's head; recropped from the top. (2) A test expected gym 1 to get `spin-1`, but 1 ÷ 2 leaves 1, so it gets `spin-2`; the test and CREDITS were fixed, not the code. (3) A test used one gym with `classes` and `boxing`; that is a tie, so A to Z rightly gave boxing. The test needed a second classes gym.
+- Accessibility: the hero photo is decorative (`alt=""`), because the headline says it all. White text sits on a dark shade (rgba(17,24,39,0.78)), about 9:1 contrast at the solid part. Card photos have alt text, but it describes a stock photo of the gym type, not the real gym; in Task 3 owners' own photos with their own alt text replace it.
+- Side effect of the "most popular" rule worth knowing: boxing, outdoor and spin are always paired with a more popular tag in our data, so their photos show only when someone searches for them.

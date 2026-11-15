@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react';
 import FavouriteButton from '../components/FavouriteButton.jsx';
-import { fetchListing } from '../api/listings.js';
+import { fetchListing, fetchTagCounts } from '../api/listings.js';
+import { gymImage } from '../lib/gymImage.js';
+import { parseSearch } from '../lib/urlState.js';
 
 // One gym in full. The page asks the fake API for it by id and shows one of:
 // loading, error (with Try again), not found, or the gym.
 export default function DetailPage({ gymId, isFavourite = false, onToggleFavourite }) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ status: 'loading', gym: null, error: '' });
+  const [counts, setCounts] = useState({});
 
   useEffect(() => {
     let cancelled = false;
+    // Only for the photo. If it fails the page still works: ties then go A to Z.
+    fetchTagCounts()
+      .then((c) => !cancelled && setCounts(c))
+      .catch(() => {});
     fetchListing(gymId)
       .then((gym) => {
         if (!cancelled) setState({ status: gym ? 'ready' : 'notfound', gym, error: '' });
@@ -29,6 +36,8 @@ export default function DetailPage({ gymId, isFavourite = false, onToggleFavouri
   };
 
   const { status, gym, error } = state;
+  // The search text is still in the address (?q=), so the photo matches the card.
+  const image = gym && gymImage(gym, { query: parseSearch(window.location.search).q, counts });
 
   return (
     <main className="page">
@@ -63,6 +72,7 @@ export default function DetailPage({ gymId, isFavourite = false, onToggleFavouri
               <FavouriteButton gymName={gym.name} isFavourite={isFavourite} onToggle={onToggleFavourite} />
             )}
           </div>
+          <img className="detail-photo" src={image.src} alt={image.alt} width="960" height="540" />
           <p className="muted">
             {gym.address}, {gym.area}, {gym.city}
           </p>

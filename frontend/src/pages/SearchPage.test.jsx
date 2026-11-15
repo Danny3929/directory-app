@@ -37,6 +37,33 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
+describe('SearchPage photos', () => {
+  it('has a top band with the headline; its photo is decorative (empty alt)', async () => {
+    const { container } = render(<SearchPage />);
+    expect(screen.getByRole('heading', { level: 1, name: /find a gym in nairobi/i })).toBeTruthy();
+    expect(container.querySelector('.hero-photo').getAttribute('alt')).toBe('');
+    await screen.findByText('Alpha Gym');
+  });
+
+  it('puts a lazy-loaded photo with alt text on every card', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    const photos = screen.getAllByRole('img', { name: /fitness class/i });
+    expect(photos).toHaveLength(3);
+    expect(photos[0].getAttribute('loading')).toBe('lazy');
+  });
+
+  it('shows the photo of the tag the visitor searched for', async () => {
+    // classes is on 2 gyms, boxing on 1, so classes is more popular.
+    fetchListings.mockResolvedValue([gyms[0], { ...gyms[2], tags: ['classes', 'boxing'] }]);
+    render(<SearchPage />);
+    await screen.findByText('Gamma Boxing');
+    expect(screen.getAllByRole('img', { name: /fitness class/i })).toHaveLength(2);
+    type(/search gyms/i, 'boxing');
+    expect(screen.getByRole('img', { name: /sparring/i })).toBeTruthy();
+  });
+});
+
 describe('SearchPage', () => {
   it('shows a loading message, then the gyms', async () => {
     render(<SearchPage />);

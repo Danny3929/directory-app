@@ -8,6 +8,7 @@ vi.mock('./api/listings.js', () => ({
   fetchListings: vi.fn(),
   fetchZips: vi.fn(),
   fetchListing: vi.fn(),
+  fetchTagCounts: vi.fn(async () => ({})),
 }));
 
 const gym = (id, name) => ({
