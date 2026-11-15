@@ -9,6 +9,7 @@ import GymCard from '../components/GymCard.jsx';
 
 const ZIP_LENGTH = 5;
 const PRICE_DIGITS = 6;
+const SEARCH_DELAY_MS = 300;
 
 // What the visitor typed in a price box -> a number, or null for empty.
 // Anything that is not a digit (letters, commas, spaces) is dropped, so '4,000' is 4000.
@@ -53,6 +54,22 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   };
 
   const update = (change) => setFilters((old) => ({ ...old, ...change }));
+
+  // Debounce (Dan's spec): the box shows each letter at once (text), but the list
+  // and address (filters.q) only change after SEARCH_DELAY_MS with no new letter.
+  const [text, setText] = useState(filters.q);
+  useEffect(() => {
+    // Every new letter cancels the old timer (cleanup below) and starts a new one.
+    const timer = setTimeout(() => {
+      setFilters((old) => (old.q === text ? old : { ...old, q: text }));
+    }, SEARCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [text]);
+  // Enter and "Clear search" skip the wait.
+  const searchNow = (value) => {
+    setText(value);
+    update({ q: value });
+  };
 
   const zipCode = filters.zip.trim();
   const origin = data.zips.find((z) => z.zip === zipCode) ?? null;
@@ -106,14 +123,20 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
         </div>
       </header>
 
-      <form className="controls" onSubmit={(e) => e.preventDefault()}>
+      <form
+        className="controls"
+        onSubmit={(e) => {
+          e.preventDefault();
+          searchNow(text);
+        }}
+      >
         <div className="field">
           <label htmlFor="q">Search gyms</label>
           <input
             id="q"
             type="search"
-            value={filters.q}
-            onChange={(e) => update({ q: e.target.value })}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             placeholder="Name or what they offer"
           />
         </div>
@@ -312,7 +335,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
           ) : (
             <>
               <p>No gyms match "{filters.q}".</p>
-              <button type="button" onClick={() => update({ q: '' })}>
+              <button type="button" onClick={() => searchNow('')}>
                 Clear search
               </button>
             </>

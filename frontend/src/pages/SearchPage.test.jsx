@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import SearchPage from './SearchPage.jsx';
 import { fetchListings, fetchZips } from '../api/listings.js';
 
@@ -28,6 +28,13 @@ const zips = [
 
 const names = () => screen.queryAllByRole('heading', { level: 3 }).map((h) => h.textContent);
 const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+// Type in the search box, then press Enter, which searches at once (no 0.3 s wait).
+const searchNow = (value) => {
+  type(/search gyms/i, value);
+  fireEvent.submit(screen.getByLabelText(/search gyms/i).closest('form'));
+};
+// Move the fake clock forward, inside act() so React redraws.
+const wait = (ms) => act(() => vi.advanceTimersByTime(ms));
 
 beforeEach(() => {
   window.history.replaceState(null, '', '/');
@@ -35,7 +42,61 @@ beforeEach(() => {
   fetchZips.mockReset().mockResolvedValue(structuredClone(zips));
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
+
+describe('SearchPage search box waits for a pause (debounce, Dan picked 0.3 s)', () => {
+  // Data loads with the real clock; only then do we take over the clock.
+  const ready = async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    vi.useFakeTimers();
+  };
+
+  it('shows the letters at once, but only filters after 300 ms with no typing', async () => {
+    await ready();
+    type(/search gyms/i, 'box');
+    expect(screen.getByLabelText(/search gyms/i).value).toBe('box');
+    wait(299);
+    expect(names()).toHaveLength(3);
+    expect(window.location.search).toBe('');
+    wait(1);
+    expect(names()).toEqual(['Gamma Boxing']);
+    expect(window.location.search).toBe('?q=box');
+  });
+
+  it('starts the wait again on every new letter', async () => {
+    await ready();
+    type(/search gyms/i, 'b');
+    wait(200);
+    type(/search gyms/i, 'bo');
+    wait(200);
+    type(/search gyms/i, 'box');
+    wait(200);
+    // 600 ms since the first letter, but never a 300 ms pause, so nothing filtered yet.
+    expect(names()).toHaveLength(3);
+    wait(100);
+    expect(names()).toEqual(['Gamma Boxing']);
+  });
+
+  it('searches straight away when Enter is pressed', async () => {
+    await ready();
+    searchNow('box');
+    expect(names()).toEqual(['Gamma Boxing']);
+  });
+
+  it('a pending search does not undo Clear search', async () => {
+    await ready();
+    searchNow('zzz');
+    type(/search gyms/i, 'zzzz');
+    fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
+    wait(300);
+    expect(names()).toHaveLength(3);
+    expect(screen.getByLabelText(/search gyms/i).value).toBe('');
+  });
+});
 
 describe('SearchPage photos', () => {
   it('has a top band with the headline; its photo is decorative (empty alt)', async () => {
@@ -59,7 +120,7 @@ describe('SearchPage photos', () => {
     render(<SearchPage />);
     await screen.findByText('Gamma Boxing');
     expect(screen.getAllByRole('img', { name: /fitness class/i })).toHaveLength(2);
-    type(/search gyms/i, 'boxing');
+    searchNow('boxing');
     expect(screen.getByRole('img', { name: /sparring/i })).toBeTruthy();
   });
 });
@@ -76,7 +137,7 @@ describe('SearchPage', () => {
   it('filters by text and writes the search into the address', async () => {
     render(<SearchPage />);
     await screen.findByText('Alpha Gym');
-    type(/search gyms/i, 'box');
+    searchNow('box');
     expect(names()).toEqual(['Gamma Boxing']);
     expect(window.location.search).toBe('?q=box');
   });
@@ -92,10 +153,12 @@ describe('SearchPage', () => {
   it('shows an empty state with a way back', async () => {
     render(<SearchPage />);
     await screen.findByText('Alpha Gym');
-    type(/search gyms/i, 'zzz');
+    searchNow('zzz');
     expect(screen.getByText(/no gyms match/i)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
     expect(names()).toHaveLength(3);
+    // The box empties too, so it does not still say "zzz".
+    expect(screen.getByLabelText(/search gyms/i).value).toBe('');
   });
 
   it('shows an error with Try again, and recovers', async () => {
