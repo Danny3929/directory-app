@@ -4,13 +4,18 @@ import listings from './listings.json';
 import zips from './zips.json';
 import { distanceKm } from '../lib/geo.js';
 
-// Rough centre of each area (checked against a map). A gym must sit within 1.5 km of its own area's centre.
+// Rough centre of each area and the county it is in. A gym must sit within 1.5 km of its own area's centre.
 const AREAS = {
-  Kilimani: { lat: -1.2897, lng: 36.787 },
-  Kileleshwa: { lat: -1.276, lng: 36.779 },
-  Lavington: { lat: -1.28, lng: 36.769 },
-  Westlands: { lat: -1.268, lng: 36.811 },
-  'Upper Hill': { lat: -1.298, lng: 36.816 },
+  Kilimani: { lat: -1.2897, lng: 36.787, county: 'Nairobi' },
+  Kileleshwa: { lat: -1.276, lng: 36.779, county: 'Nairobi' },
+  Lavington: { lat: -1.28, lng: 36.769, county: 'Nairobi' },
+  Westlands: { lat: -1.268, lng: 36.811, county: 'Nairobi' },
+  'Upper Hill': { lat: -1.298, lng: 36.816, county: 'Nairobi' },
+  Karen: { lat: -1.319, lng: 36.711, county: 'Nairobi' },
+  Ruaka: { lat: -1.2095, lng: 36.779, county: 'Kiambu' },
+  Rongai: { lat: -1.396, lng: 36.745, county: 'Kajiado' },
+  Kitengela: { lat: -1.473, lng: 36.96, county: 'Kajiado' },
+  Thika: { lat: -1.0333, lng: 37.0693, county: 'Kiambu' },
 };
 
 describe('listings.json', () => {
@@ -26,7 +31,7 @@ describe('listings.json', () => {
       expect(Array.isArray(g.tags) && g.tags.length > 0, `tags of ${g.id}`).toBe(true);
       expect(typeof g.address === 'string' && g.address !== '', `address of ${g.id}`).toBe(true);
       expect(Object.keys(AREAS), `area of ${g.id}`).toContain(g.area);
-      expect(g.city).toBe('Nairobi');
+      expect(g.city, `city of ${g.name}`).toBe(AREAS[g.area].county);
       expect(Number.isInteger(g.priceMin) && g.priceMin > 0, `priceMin of ${g.id}`).toBe(true);
       expect(Number.isInteger(g.priceMax) && g.priceMax >= g.priceMin, `priceMax of ${g.id}`).toBe(true);
       expect(typeof g.isFeatured, `isFeatured of ${g.id}`).toBe('boolean');
@@ -63,8 +68,18 @@ describe('listings.json', () => {
     }
   });
 
-  it('covers all five areas and has some featured gyms, but not most', () => {
-    expect(new Set(listings.map((g) => g.area)).size).toBe(5);
+  it('makes every radius choice change the list from Kilimani (5 < 10 < 25 < 50 km)', () => {
+    const k = AREAS.Kilimani;
+    const within = (km) => listings.filter((g) => distanceKm(k.lat, k.lng, g.lat, g.lng) <= km).length;
+    const counts = [5, 10, 25, 50].map(within);
+    for (let i = 1; i < counts.length; i++) {
+      expect(counts[i], `${[5, 10, 25, 50][i]} km should show more gyms than the step before`).toBeGreaterThan(counts[i - 1]);
+    }
+    expect(within(50)).toBe(listings.length);
+  });
+
+  it('covers all ten areas and has some featured gyms, but not most', () => {
+    expect(new Set(listings.map((g) => g.area)).size).toBe(10);
     const featured = listings.filter((g) => g.isFeatured).length;
     expect(featured).toBeGreaterThanOrEqual(3);
     expect(featured).toBeLessThan(listings.length / 2);
@@ -82,13 +97,13 @@ describe('zips.json', () => {
     }
   });
 
-  it('has unique ZIP codes, all inside Nairobi', () => {
+  it('has unique ZIP codes, all in the greater Nairobi area (Thika to Kitengela)', () => {
     expect(new Set(zips.map((z) => z.zip)).size).toBe(zips.length);
     for (const z of zips) {
-      expect(z.lat).toBeGreaterThan(-1.45);
-      expect(z.lat).toBeLessThan(-1.15);
-      expect(z.lng).toBeGreaterThan(36.65);
-      expect(z.lng).toBeLessThan(36.95);
+      expect(z.lat, z.label).toBeGreaterThan(-1.5);
+      expect(z.lat, z.label).toBeLessThan(-1.0);
+      expect(z.lng, z.label).toBeGreaterThan(36.65);
+      expect(z.lng, z.label).toBeLessThan(37.1);
     }
   });
 });
