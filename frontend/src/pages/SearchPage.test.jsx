@@ -107,3 +107,48 @@ describe('SearchPage', () => {
     expect(screen.getByText(/5 digits/i)).toBeTruthy();
   });
 });
+
+describe('SearchPage saved filter', () => {
+  const box = () => screen.getByRole('checkbox', { name: /saved only/i });
+
+  it('shows only saved gyms and writes saved=1 into the address', async () => {
+    render(<SearchPage favourites={[2]} onToggleFavourite={() => {}} />);
+    await screen.findByText('Alpha Gym');
+    fireEvent.click(box());
+    expect(names()).toEqual(['Beta Gym']);
+    expect(window.location.search).toBe('?saved=1');
+  });
+
+  it('opens a shared saved link with the box ticked', async () => {
+    window.history.replaceState(null, '', '/?saved=1');
+    render(<SearchPage favourites={[3]} onToggleFavourite={() => {}} />);
+    await screen.findByText('Gamma Boxing');
+    expect(box().checked).toBe(true);
+    expect(names()).toEqual(['Gamma Boxing']);
+  });
+
+  it('explains an empty saved list and offers all gyms', async () => {
+    window.history.replaceState(null, '', '/?saved=1');
+    render(<SearchPage favourites={[]} onToggleFavourite={() => {}} />);
+    await screen.findByText(/no saved gyms yet/i);
+    fireEvent.click(screen.getByRole('button', { name: /show all gyms/i }));
+    await screen.findByText('Alpha Gym');
+    expect(box().checked).toBe(false);
+  });
+
+  it('shows a "no longer available" card for a saved gym that is gone, and lets you remove it', async () => {
+    window.history.replaceState(null, '', '/?saved=1');
+    const onToggle = vi.fn();
+    render(<SearchPage favourites={[99]} onToggleFavourite={onToggle} />);
+    await screen.findByText(/no longer available/i);
+    fireEvent.click(screen.getByRole('button', { name: /remove from saved/i }));
+    expect(onToggle).toHaveBeenCalledWith(99);
+  });
+
+  it('combines with the text search', async () => {
+    window.history.replaceState(null, '', '/?saved=1&q=alpha');
+    render(<SearchPage favourites={[1, 2]} onToggleFavourite={() => {}} />);
+    await screen.findByText('Alpha Gym');
+    expect(names()).toEqual(['Alpha Gym']);
+  });
+});

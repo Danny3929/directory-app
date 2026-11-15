@@ -202,3 +202,14 @@ button {
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+.field-check {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: var(--target-size);
+}
+.field-check input {
+  width: 20px;
+  height: 20px;
+}

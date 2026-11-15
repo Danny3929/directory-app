@@ -49,15 +49,21 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   const zipUnknown = zipCode !== '' && !origin && !zipIncomplete;
   const needsOrigin = filters.sort === 'distance' && !origin;
 
+  // Saved ids the server no longer knows about (gym removed). Shown so they can be cleared.
+  const goneIds = filters.saved && filters.q === ''
+    ? favourites.filter((id) => !data.listings.some((g) => g.id === id))
+    : [];
+
   const results = useMemo(() => {
-    const matched = filterByText(data.listings, filters.q);
+    const pool = filters.saved ? data.listings.filter((g) => favourites.includes(g.id)) : data.listings;
+    const matched = filterByText(pool, filters.q);
     // Always run the distance sort first: it adds distanceKm to each gym when
     // we know the ZIP, and gives the A to Z tie order the other sorts keep.
     const byDistance = sortByDistance(matched, origin);
     if (filters.sort === 'cheapest') return sortByCheapest(byDistance);
     if (filters.sort === 'featured') return sortByFeatured(byDistance);
     return byDistance;
-  }, [data.listings, filters.q, filters.sort, origin]);
+  }, [data.listings, filters.q, filters.sort, filters.saved, favourites, origin]);
 
   return (
     <main className="page">
@@ -93,6 +99,15 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
             <option value="cheapest">Cheapest first</option>
             <option value="distance">Nearest first</option>
           </select>
+        </div>
+        <div className="field field-check">
+          <input
+            id="saved"
+            type="checkbox"
+            checked={filters.saved}
+            onChange={(e) => update({ saved: e.target.checked })}
+          />
+          <label htmlFor="saved">Saved only</label>
         </div>
       </form>
 
@@ -136,7 +151,16 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
         </div>
       )}
 
-      {data.status === 'ready' && results.length === 0 && (
+      {data.status === 'ready' && filters.saved && favourites.length === 0 && (
+        <div className="notice">
+          <p>You have no saved gyms yet. Tap the heart on a gym to save it.</p>
+          <button type="button" onClick={() => update({ saved: false })}>
+            Show all gyms
+          </button>
+        </div>
+      )}
+
+      {data.status === 'ready' && results.length === 0 && goneIds.length === 0 && !(filters.saved && favourites.length === 0) && (
         <div className="notice">
           <p>No gyms match "{filters.q}".</p>
           <button type="button" onClick={() => update({ q: '' })}>
@@ -145,7 +169,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
         </div>
       )}
 
-      {data.status === 'ready' && results.length > 0 && (
+      {data.status === 'ready' && (results.length > 0 || goneIds.length > 0) && (
         <>
           <p className="muted" aria-live="polite">
             {results.length} {results.length === 1 ? 'gym' : 'gyms'}
@@ -158,6 +182,14 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
                 isFavourite={favourites.includes(gym.id)}
                 onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(gym.id))}
               />
+            ))}
+            {goneIds.map((id) => (
+              <li key={`gone-${id}`} className="card">
+                <p>This saved gym is no longer available.</p>
+                <button type="button" onClick={() => onToggleFavourite?.(id)}>
+                  Remove from saved
+                </button>
+              </li>
             ))}
           </ul>
         </>

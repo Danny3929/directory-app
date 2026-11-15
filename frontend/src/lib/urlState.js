@@ -15,16 +15,18 @@ export function parseSearch(search) {
     q: (params.get('q') ?? '').slice(0, MAX_LENGTH),
     zip: (params.get('zip') ?? '').slice(0, MAX_LENGTH),
     sort: SORTS.includes(sort) ? sort : DEFAULT_SORT,
+    saved: params.get('saved') === '1',
   };
 }
 
 // Only choices that differ from the default go in the address, so the
 // plain page keeps a clean URL. Returns '' or a string starting with '?'.
-export function buildSearch({ q, zip, sort }) {
+export function buildSearch({ q, zip, sort, saved }) {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (zip) params.set('zip', zip);
   if (sort && sort !== DEFAULT_SORT) params.set('sort', sort);
+  if (saved) params.set('saved', '1');
   const text = params.toString();
   return text ? `?${text}` : '';
 }

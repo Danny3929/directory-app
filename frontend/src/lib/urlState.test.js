@@ -7,11 +7,12 @@ describe('parseSearch', () => {
       q: 'flex',
       zip: '00619',
       sort: 'cheapest',
+      saved: false,
     });
   });
 
   it('uses empty text and the default sort when nothing is there', () => {
-    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured' });
+    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false });
   });
 
   it('ignores a sort value we do not know', () => {
@@ -29,7 +30,20 @@ describe('buildSearch', () => {
   });
 
   it('round-trips, including spaces and symbols', () => {
-    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance' };
+    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true };
     expect(parseSearch(buildSearch(filters))).toEqual(filters);
+  });
+});
+
+describe('saved flag', () => {
+  it('reads ?saved=1 as true and anything else as false', () => {
+    expect(parseSearch('?saved=1').saved).toBe(true);
+    expect(parseSearch('?saved=yes').saved).toBe(false);
+    expect(parseSearch('').saved).toBe(false);
+  });
+
+  it('writes saved=1 only when it is on', () => {
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', saved: true })).toBe('?saved=1');
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', saved: false })).toBe('');
   });
 });
