@@ -13,7 +13,7 @@ vi.mock('../api/listings.js', () => ({
 
 const gym = (id, name, lat, lng, priceKsh, featured = false) => ({
   id, name, description: `${name} description`, tags: ['classes'],
-  address: '1 Test Rd', area: 'Kilimani', city: 'Nairobi', priceKsh, featured, lat, lng,
+  address: '1 Test Rd', area: 'Kilimani', city: 'Nairobi', priceMin: priceKsh, priceMax: priceKsh, isFeatured: featured, lat, lng,
 });
 
 const gyms = [

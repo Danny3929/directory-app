@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { existsSync } from 'node:fs';
 import listings from './listings.json';
 import zips from './zips.json';
 import { distanceKm } from '../lib/geo.js';
@@ -26,14 +27,33 @@ describe('listings.json', () => {
       expect(typeof g.address === 'string' && g.address !== '', `address of ${g.id}`).toBe(true);
       expect(Object.keys(AREAS), `area of ${g.id}`).toContain(g.area);
       expect(g.city).toBe('Nairobi');
-      expect(Number.isInteger(g.priceKsh) && g.priceKsh > 0, `price of ${g.id}`).toBe(true);
-      expect(typeof g.featured, `featured of ${g.id}`).toBe('boolean');
+      expect(Number.isInteger(g.priceMin) && g.priceMin > 0, `priceMin of ${g.id}`).toBe(true);
+      expect(Number.isInteger(g.priceMax) && g.priceMax >= g.priceMin, `priceMax of ${g.id}`).toBe(true);
+      expect(typeof g.isFeatured, `isFeatured of ${g.id}`).toBe('boolean');
+      expect(g.slug, `slug of ${g.id}`).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+      expect(Array.isArray(g.photos) && g.photos.length > 0, `photos of ${g.id}`).toBe(true);
     }
   });
 
-  it('has unique ids and unique names', () => {
+  it('has unique ids, names and slugs', () => {
     expect(new Set(listings.map((g) => g.id)).size).toBe(listings.length);
     expect(new Set(listings.map((g) => g.name)).size).toBe(listings.length);
+    expect(new Set(listings.map((g) => g.slug)).size).toBe(listings.length);
+  });
+
+  it('gives every gym a ZIP from zips.json that matches its area', () => {
+    const codes = new Map(zips.map((z) => [z.zip, z.label]));
+    for (const g of listings) {
+      expect(codes.get(g.zip), `zip of ${g.name}`).toBe(g.area);
+    }
+  });
+
+  it('only lists photo files that exist in public/images/', () => {
+    for (const g of listings) {
+      for (const file of g.photos) {
+        expect(existsSync(new URL(`../../public/images/${file}`, import.meta.url)), `${file} of ${g.name}`).toBe(true);
+      }
+    }
   });
 
   it('puts every gym inside its own area', () => {
@@ -45,7 +65,7 @@ describe('listings.json', () => {
 
   it('covers all five areas and has some featured gyms, but not most', () => {
     expect(new Set(listings.map((g) => g.area)).size).toBe(5);
-    const featured = listings.filter((g) => g.featured).length;
+    const featured = listings.filter((g) => g.isFeatured).length;
     expect(featured).toBeGreaterThanOrEqual(3);
     expect(featured).toBeLessThan(listings.length / 2);
   });

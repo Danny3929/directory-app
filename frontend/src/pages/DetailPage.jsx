@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import FavouriteButton from '../components/FavouriteButton.jsx';
 import { fetchListing, fetchTagCounts } from '../api/listings.js';
 import { gymImage } from '../lib/gymImage.js';
+import { formatPrice } from '../lib/price.js';
 import { parseSearch } from '../lib/urlState.js';
 
 // One gym in full. The page asks the fake API for it by id and shows one of:
@@ -67,7 +68,7 @@ export default function DetailPage({ gymId, isFavourite = false, onToggleFavouri
         <article className="detail">
           <div className="card-top">
             <h1>{gym.name}</h1>
-            {gym.featured && <span className="badge">Featured</span>}
+            {gym.isFeatured && <span className="badge">Featured</span>}
             {onToggleFavourite && (
               <FavouriteButton gymName={gym.name} isFavourite={isFavourite} onToggle={onToggleFavourite} />
             )}
@@ -77,7 +78,7 @@ export default function DetailPage({ gymId, isFavourite = false, onToggleFavouri
             {gym.address}, {gym.area}, {gym.city}
           </p>
           <p className="card-facts">
-            <span>Ksh {gym.priceKsh.toLocaleString('en-US')}</span>
+            <span>{formatPrice(gym)} a month</span>
           </p>
           <p>{gym.description}</p>
           {gym.tags?.length > 0 && (

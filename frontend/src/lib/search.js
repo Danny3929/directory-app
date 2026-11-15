@@ -35,12 +35,12 @@ export function sortByDistance(listings, origin) {
   });
 }
 
-// Lowest monthly price first.
+// Lowest starting price (priceMin) first.
 export function sortByCheapest(listings) {
-  return [...listings].sort((a, b) => a.priceKsh - b.priceKsh);
+  return [...listings].sort((a, b) => a.priceMin - b.priceMin);
 }
 
 // Featured gyms first.
 export function sortByFeatured(listings) {
-  return [...listings].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+  return [...listings].sort((a, b) => Number(Boolean(b.isFeatured)) - Number(Boolean(a.isFeatured)));
 }

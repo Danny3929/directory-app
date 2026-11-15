@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { filterByText, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
 
 // Tiny invented gyms, just for these tests.
-const flex = { id: 1, name: 'Flex Gym', description: 'Weights and cardio', priceKsh: 3000, featured: false, lat: -1.29, lng: 36.78 };
-const yoga = { id: 2, name: 'Calm Studio', description: 'Flexible yoga classes', priceKsh: 2000, featured: true, lat: -1.3, lng: 36.8 };
-const box = { id: 3, name: 'Iron Box', description: 'Boxing and strength', priceKsh: 2500, featured: false, lat: -1.28, lng: 36.77 };
+const flex = { id: 1, name: 'Flex Gym', description: 'Weights and cardio', priceMin: 3000, isFeatured: false, lat: -1.29, lng: 36.78 };
+const yoga = { id: 2, name: 'Calm Studio', description: 'Flexible yoga classes', priceMin: 2000, isFeatured: true, lat: -1.3, lng: 36.8 };
+const box = { id: 3, name: 'Iron Box', description: 'Boxing and strength', priceMin: 2500, isFeatured: false, lat: -1.28, lng: 36.77 };
 const all = [flex, yoga, box];
 
 describe('filterByText', () => {
@@ -60,7 +60,7 @@ describe('sortByDistance', () => {
   });
 
   it('puts a gym with no coordinates last', () => {
-    const lost = { id: 9, name: 'No Map', priceKsh: 1 };
+    const lost = { id: 9, name: 'No Map', priceMin: 1 };
     expect(sortByDistance([lost, yoga, flex], origin).map((g) => g.id)).toEqual([1, 2, 9]);
   });
 

@@ -12,7 +12,7 @@ vi.mock('../api/listings.js', () => ({
 const gym = {
   id: 3, name: 'Baobab Barbell', description: 'Boxing bags and coached sessions.',
   tags: ['boxing', 'strength'], address: '59 Wood Ave', area: 'Kilimani', city: 'Nairobi',
-  priceKsh: 3500, featured: true, lat: -1.29, lng: 36.78,
+  priceMin: 3500, priceMax: 5000, isFeatured: true, lat: -1.29, lng: 36.78,
 };
 
 beforeEach(() => {

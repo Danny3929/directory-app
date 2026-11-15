@@ -1,4 +1,5 @@
 import { gymPath } from '../lib/route.js';
+import { formatPrice } from '../lib/price.js';
 import FavouriteButton from './FavouriteButton.jsx';
 
 // One gym in the results list. It only shows what it is given.
@@ -17,7 +18,7 @@ export default function GymCard({ gym, image, isFavourite = false, onToggleFavou
         <h3>
           <a href={gymPath(gym.id)}>{gym.name}</a>
         </h3>
-        {gym.featured && <span className="badge">Featured</span>}
+        {gym.isFeatured && <span className="badge">Featured</span>}
         {onToggleFavourite && (
           <FavouriteButton gymName={gym.name} isFavourite={isFavourite} onToggle={onToggleFavourite} />
         )}
@@ -26,7 +27,7 @@ export default function GymCard({ gym, image, isFavourite = false, onToggleFavou
         {gym.address}, {gym.area}, {gym.city}
       </p>
       <p className="card-facts">
-        <span>Ksh {gym.priceKsh.toLocaleString('en-US')}</span>
+        <span>{formatPrice(gym)} a month</span>
         {hasDistance && <span>{gym.distanceKm.toFixed(2)} km away</span>}
       </p>
       <p>{gym.description}</p>
