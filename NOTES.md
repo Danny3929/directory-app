@@ -10,8 +10,10 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - 2026-11-15: Photos picked by Dan from free Unsplash photos: hero A, weights D, strength G (African lifters, because "gym" means weights to most people), boxing A, yoga B, pilates A, outdoor B, spin E + H, classes A (AI's suggestion). Licence pages checked on 2026-11-15, credits in `CREDITS.md`.
 - 2026-11-14: `filterByText` searches name and description. Dan picked only Description on card 3, and the AI assumed name too. Dan agreed with the AI's suggestions on 2026-11-14.
 
+- 2026-11-15: Data fields renamed to the guide's names (`priceKsh` → `priceMin`/`priceMax`, `featured` → `isFeatured`) and `slug`, `zip`, `photos` added. `zip` comes from the gym's area (Kilimani 00619, Kileleshwa 00605, Lavington 00603, Westlands 00800, Upper Hill 00202). `priceMax` is invented: the starting price plus Ksh 1,000 to 3,000 for the top plan. `photos` lists the gym's tag photos, most popular tag first, with the classes photo if none. "Cheapest first" sorts by `priceMin`.
+
 ## Things the AI got wrong
-- (none logged yet)
+- 2026-11-15: Said Task 2 only needed a README and Vercel. Checking against the guide showed radius, tag and price filters, debounce, 12 per page, `/listing/:slug` with React Router, gallery, similar listings, enquiry form, Favourites page and `vercel.json` were all missing. The AI had also suggested `#/gym/N` addresses instead of the React Router the guide asks for. Rule: check every guide requirement before calling a task nearly done.
 
 ## Accessibility problems found
 - (none yet)
