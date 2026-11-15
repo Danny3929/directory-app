@@ -401,17 +401,6 @@ button {
   outline-offset: 2px;
 }
 
-.field-check {
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-sm);
-  min-height: var(--target-size);
-}
-.field-check input {
-  width: 20px;
-  height: 20px;
-}
-
 /* Top menu on every page. The page you are on gets aria-current="page"
    from NavLink, so the style follows the same signal screen readers get. */
 .site-nav {

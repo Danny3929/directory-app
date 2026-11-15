@@ -106,11 +106,6 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   // The radius is kept in the address even without a ZIP, but only used once we know where "you" are.
   const radiusOn = Boolean(origin && filters.radius);
 
-  // Saved ids the server no longer knows about (gym removed). Shown so they can be cleared.
-  const goneIds = filters.saved && filters.q === ''
-    ? favourites.filter((id) => !data.listings.some((g) => g.id === id))
-    : [];
-
   // How many gyms have each tag: the chip counts and the "most popular tag" photo rule.
   const counts = useMemo(() => tagCounts(data.listings), [data.listings]);
   const allTags = Object.keys(counts).sort();
@@ -125,9 +120,8 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   const budget = priceError ? null : filters.max;
 
   const results = useMemo(() => {
-    const pool = filters.saved ? data.listings.filter((g) => favourites.includes(g.id)) : data.listings;
     const matched = filterByPrice(
-      filterByTags(filterByRadius(filterByText(pool, filters.q), origin, filters.radius), activeTags),
+      filterByTags(filterByRadius(filterByText(data.listings, filters.q), origin, filters.radius), activeTags),
       filters.min,
       filters.max,
     );
@@ -137,7 +131,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
     if (filters.sort === 'cheapest') return sortByCheapest(byDistance);
     if (filters.sort === 'featured') return sortByFeatured(byDistance);
     return byDistance;
-  }, [data.listings, filters.q, filters.sort, filters.saved, filters.radius, filters.min, filters.max, activeTags, favourites, origin]);
+  }, [data.listings, filters.q, filters.sort, filters.radius, filters.min, filters.max, activeTags, origin]);
 
   // Only the first page * 12 gyms are drawn; Load more raises the page by one.
   const shown = results.slice(0, filters.page * PAGE_SIZE);
@@ -266,15 +260,6 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
             </p>
           )}
         </fieldset>
-        <div className="field field-check">
-          <input
-            id="saved"
-            type="checkbox"
-            checked={filters.saved}
-            onChange={(e) => update({ saved: e.target.checked })}
-          />
-          <label htmlFor="saved">Saved only</label>
-        </div>
         {allTags.length > 0 && (
           // Toggle buttons: aria-pressed tells screen readers "pressed" or "not pressed".
           <fieldset className="field-tags">
@@ -337,16 +322,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
         </div>
       )}
 
-      {data.status === 'ready' && filters.saved && favourites.length === 0 && (
-        <div className="notice">
-          <p>You have no saved gyms yet. Tap the heart on a gym to save it.</p>
-          <button type="button" onClick={() => update({ saved: false })}>
-            Show all gyms
-          </button>
-        </div>
-      )}
-
-      {data.status === 'ready' && results.length === 0 && goneIds.length === 0 && !(filters.saved && favourites.length === 0) && (
+      {data.status === 'ready' && results.length === 0 && (
         <div className="notice">
           {radiusOn ? (
             <>
@@ -389,7 +365,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
         </div>
       )}
 
-      {data.status === 'ready' && (results.length > 0 || goneIds.length > 0) && (
+      {data.status === 'ready' && results.length > 0 && (
         <>
           <p className="muted" aria-live="polite">
             {hasMore ? `Showing ${shown.length} of ${results.length} gyms` : `${results.length} ${results.length === 1 ? 'gym' : 'gyms'}`}
@@ -404,14 +380,6 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
                 isFavourite={favourites.includes(gym.id)}
                 onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(gym.id))}
               />
-            ))}
-            {goneIds.map((id) => (
-              <li key={`gone-${id}`} className="card">
-                <p>This saved gym is no longer available.</p>
-                <button type="button" onClick={() => onToggleFavourite?.(id)}>
-                  Remove from saved
-                </button>
-              </li>
             ))}
           </ul>
           {hasMore && (

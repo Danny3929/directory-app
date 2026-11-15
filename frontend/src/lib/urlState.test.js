@@ -7,7 +7,6 @@ describe('parseSearch', () => {
       q: 'flex',
       zip: '00619',
       sort: 'cheapest',
-      saved: false,
       radius: null,
       tags: [],
       min: null,
@@ -17,7 +16,7 @@ describe('parseSearch', () => {
   });
 
   it('uses empty text and the default sort when nothing is there', () => {
-    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null, tags: [], min: null, max: null, page: 1 });
+    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', radius: null, tags: [], min: null, max: null, page: 1 });
   });
 
   it('ignores a sort value we do not know', () => {
@@ -35,21 +34,15 @@ describe('buildSearch', () => {
   });
 
   it('round-trips, including spaces and symbols', () => {
-    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10, tags: ['boxing', 'strength'], min: 2000, max: 5000, page: 3 };
+    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', radius: 10, tags: ['boxing', 'strength'], min: 2000, max: 5000, page: 3 };
     expect(parseSearch(buildSearch(filters))).toEqual(filters);
   });
 });
 
-describe('saved flag', () => {
-  it('reads ?saved=1 as true and anything else as false', () => {
-    expect(parseSearch('?saved=1').saved).toBe(true);
-    expect(parseSearch('?saved=yes').saved).toBe(false);
-    expect(parseSearch('').saved).toBe(false);
-  });
-
-  it('writes saved=1 only when it is on', () => {
-    expect(buildSearch({ q: '', zip: '', sort: 'featured', saved: true })).toBe('?saved=1');
-    expect(buildSearch({ q: '', zip: '', sort: 'featured', saved: false })).toBe('');
+describe('old saved flag (Dan 2026-11-15: removed, the Saved gyms page replaces it)', () => {
+  it('ignores ?saved=1, so it drops out of the address', () => {
+    expect(parseSearch('?saved=1')).not.toHaveProperty('saved');
+    expect(buildSearch(parseSearch('?q=box&saved=1'))).toBe('?q=box');
   });
 });
 

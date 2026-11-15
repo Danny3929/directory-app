@@ -202,48 +202,14 @@ describe('SearchPage', () => {
   });
 });
 
-describe('SearchPage saved filter', () => {
-  const box = () => screen.getByRole('checkbox', { name: /saved only/i });
-
-  it('shows only saved gyms and writes saved=1 into the address', async () => {
+describe('SearchPage without the Saved only box (Dan 2026-11-15: use the Saved gyms page)', () => {
+  it('has no Saved only box, and an old ?saved=1 link shows all gyms', async () => {
+    window.history.replaceState(null, '', '/?saved=1');
     show(<SearchPage favourites={[2]} onToggleFavourite={() => {}} />);
     await screen.findByText('Alpha Gym');
-    fireEvent.click(box());
-    expect(names()).toEqual(['Beta Gym']);
-    expect(window.location.search).toBe('?saved=1');
-  });
-
-  it('opens a shared saved link with the box ticked', async () => {
-    window.history.replaceState(null, '', '/?saved=1');
-    show(<SearchPage favourites={[3]} onToggleFavourite={() => {}} />);
-    await screen.findByText('Gamma Boxing');
-    expect(box().checked).toBe(true);
-    expect(names()).toEqual(['Gamma Boxing']);
-  });
-
-  it('explains an empty saved list and offers all gyms', async () => {
-    window.history.replaceState(null, '', '/?saved=1');
-    show(<SearchPage favourites={[]} onToggleFavourite={() => {}} />);
-    await screen.findByText(/no saved gyms yet/i);
-    fireEvent.click(screen.getByRole('button', { name: /show all gyms/i }));
-    await screen.findByText('Alpha Gym');
-    expect(box().checked).toBe(false);
-  });
-
-  it('shows a "no longer available" card for a saved gym that is gone, and lets you remove it', async () => {
-    window.history.replaceState(null, '', '/?saved=1');
-    const onToggle = vi.fn();
-    show(<SearchPage favourites={[99]} onToggleFavourite={onToggle} />);
-    await screen.findByText(/no longer available/i);
-    fireEvent.click(screen.getByRole('button', { name: /remove from saved/i }));
-    expect(onToggle).toHaveBeenCalledWith(99);
-  });
-
-  it('combines with the text search', async () => {
-    window.history.replaceState(null, '', '/?saved=1&q=alpha');
-    show(<SearchPage favourites={[1, 2]} onToggleFavourite={() => {}} />);
-    await screen.findByText('Alpha Gym');
-    expect(names()).toEqual(['Alpha Gym']);
+    expect(screen.queryByRole('checkbox', { name: /saved only/i })).toBeNull();
+    expect(names()).toHaveLength(3);
+    expect(window.location.search).toBe('');
   });
 });
 

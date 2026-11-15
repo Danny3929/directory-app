@@ -111,4 +111,4 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Break checks: without reading the address on arrival, the "Find a gym" test failed; without the "from" note on the card link, both Back tests failed.
 - Checked in real Chrome at 390px: card -> detail -> Back to search kept `?q=fit&page=2` and the box text; browser Back/Forward; reload; heart -> Saved gyms (1) -> gym -> Back to saved gyms; fresh-tab `/listing/baobab-barbell`; unknown gym and unknown page.
 - Still to do for deploy (step 11): Vercel needs a `vercel.json` rewrite, or `/listing/...` gives 404 on reload. `vite preview` already does this locally.
-- Open question for Dan: keep the "Saved only" tick box on the search page now that there is a Saved gyms page, or remove it?
+- Decision (Dan): the "Saved only" tick box is removed; the Saved gyms page in the top menu is the one place for saved gyms. An old `?saved=1` link just shows all gyms. Its "no longer available" card now lives only on the Saved gyms page.
