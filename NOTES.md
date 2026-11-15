@@ -16,3 +16,13 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 
 ## Bugs and causes
 - (none yet)
+
+## Search page slice (2026-11-15)
+- Search choices (`q`, `zip`, `sort`) live in the address bar through `src/lib/urlState.js`. Unknown `sort` values fall back to "featured"; values are capped at 100 characters.
+- The page only gets data through `src/api/listings.js`. Opening `/?fail=1` makes the first load fail so the error state can be shown; "Try again" then works.
+- A ZIP with fewer than 5 characters is "incomplete", not invalid, so the "We don't recognise ZIP" message does not flash while typing.
+- Sorting: distance sort always runs first (adds `distanceKm`, A to Z on ties), then "cheapest" or "featured" sorts on top, keeping that order on ties.
+- AI mistake: wrote `urlState.js` and its test in the same step, so I never saw the test fail first. Proved it can fail afterwards by breaking the code.
+- AI mistake: first version set state at the top of an effect (lint warning `set-state-in-effect`). Moved "loading" into the Try again click.
+- AI mistake: the last commit was 723 lines (page, card, styles, tests together); the commit hook warned. Rule: split page, component and styles into separate commits.
+- Not yet checked: how the page looks on screen (screenshot was not allowed), keyboard-only walkthrough, real phone.
