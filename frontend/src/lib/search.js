@@ -14,6 +14,19 @@ export function filterByText(listings, query) {
   );
 }
 
+// Keep gyms no further than radiusKm from origin (a gym exactly on the line stays).
+// No origin (no ZIP or an unknown one) or no radius: keep everything (Dan's spec).
+// Gyms with no coordinates cannot be measured, so a radius leaves them out.
+export function filterByRadius(listings, origin, radiusKm) {
+  if (!origin || !radiusKm) return [...listings];
+  return listings.filter(
+    (gym) =>
+      typeof gym.lat === 'number' &&
+      typeof gym.lng === 'number' &&
+      distanceKm(origin.lat, origin.lng, gym.lat, gym.lng) <= radiusKm,
+  );
+}
+
 // Nearest first; equal distances go A to Z by name (Dan's rule).
 // origin is { lat, lng } (from a ZIP); null means "ZIP not found",
 // so we leave the order alone. Gyms with no coordinates go last.

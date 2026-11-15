@@ -29,7 +29,7 @@ h3 {
 
 @media (min-width: 720px) {
   .controls {
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
   }
 }
 
@@ -37,6 +37,20 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+}
+
+/* Small helper text under a field, e.g. why the radius box is off. */
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+/* A switched-off control must look off, not only ignore clicks. */
+select:disabled {
+  cursor: not-allowed;
+  background: var(--color-surface);
+  color: var(--color-muted);
 }
 
 label {

@@ -179,3 +179,75 @@ describe('SearchPage saved filter', () => {
     expect(names()).toEqual(['Alpha Gym']);
   });
 });
+
+describe('SearchPage radius filter (Dan spec 2026-11-15)', () => {
+  // Delta is about 17 km from ZIP 00619; the other three are within about 2 km.
+  const withFar = () => [...structuredClone(gyms), gym(4, 'Delta Gym', -1.2, 36.9, 1500)];
+  const radius = () => screen.getByLabelText(/within/i);
+
+  it('starts on Any distance, disabled until a ZIP is known, with a hint', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(radius().value).toBe('');
+    expect(radius().disabled).toBe(true);
+    expect(screen.getByText(/enter a zip to filter by distance/i)).toBeTruthy();
+    expect(window.location.search).toBe('');
+  });
+
+  it('filters by distance once a ZIP is entered and writes ?radius= into the address', async () => {
+    fetchListings.mockResolvedValue(withFar());
+    render(<SearchPage />);
+    await screen.findByText('Delta Gym');
+    type(/your zip/i, '00619');
+    expect(radius().disabled).toBe(false);
+    expect(screen.queryByText(/enter a zip to filter by distance/i)).toBeNull();
+    type(/within/i, '5');
+    expect(names()).not.toContain('Delta Gym');
+    expect(names()).toHaveLength(3);
+    expect(window.location.search).toBe('?zip=00619&radius=5');
+    type(/within/i, '25');
+    expect(names()).toContain('Delta Gym');
+    type(/within/i, '');
+    expect(window.location.search).toBe('?zip=00619');
+  });
+
+  it('opens a shared radius link with the same filter', async () => {
+    fetchListings.mockResolvedValue(withFar());
+    window.history.replaceState(null, '', '/?zip=00619&radius=10');
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(radius().value).toBe('10');
+    expect(names()).not.toContain('Delta Gym');
+  });
+
+  it('treats an unknown ZIP like no ZIP: radius off, all gyms, Did you mean list stays', async () => {
+    fetchListings.mockResolvedValue(withFar());
+    window.history.replaceState(null, '', '/?zip=99999&radius=5');
+    render(<SearchPage />);
+    await screen.findByText('Delta Gym');
+    expect(names()).toHaveLength(4);
+    expect(radius().disabled).toBe(true);
+    // Off means it must not look like 5 km is being applied.
+    expect(radius().value).toBe('');
+    expect(screen.getByText(/pick a zip above to filter by distance/i)).toBeTruthy();
+    expect(screen.getByText(/we don't recognise zip 99999/i)).toBeTruthy();
+    // Picking a ZIP from the list turns the remembered radius back on.
+    fireEvent.click(screen.getByRole('button', { name: /00619 kilimani/i }));
+    expect(radius().disabled).toBe(false);
+    expect(radius().value).toBe('5');
+    expect(names()).not.toContain('Delta Gym');
+  });
+
+  it('says when nothing is inside the radius and offers Any distance', async () => {
+    fetchListings.mockResolvedValue([gym(4, 'Delta Gym', -1.2, 36.9, 1500)]);
+    render(<SearchPage />);
+    await screen.findByText('Delta Gym');
+    type(/your zip/i, '00619');
+    type(/within/i, '5');
+    expect(names()).toHaveLength(0);
+    expect(screen.getByText(/no gyms within 5 km of 00619/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /show any distance/i }));
+    expect(names()).toEqual(['Delta Gym']);
+    expect(window.location.search).toBe('?zip=00619');
+  });
+});

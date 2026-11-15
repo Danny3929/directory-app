@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchListings, fetchZips } from '../api/listings.js';
-import { filterByText, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
-import { parseSearch, buildSearch } from '../lib/urlState.js';
+import { filterByText, filterByRadius, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
+import { parseSearch, buildSearch, RADII } from '../lib/urlState.js';
 import { gymImage, tagCounts } from '../lib/gymImage.js';
 import GymCard from '../components/GymCard.jsx';
 
@@ -49,6 +49,8 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   const zipIncomplete = zipCode !== '' && !origin && zipCode.length < ZIP_LENGTH;
   const zipUnknown = zipCode !== '' && !origin && !zipIncomplete;
   const needsOrigin = filters.sort === 'distance' && !origin;
+  // The radius is kept in the address even without a ZIP, but only used once we know where "you" are.
+  const radiusOn = Boolean(origin && filters.radius);
 
   // Saved ids the server no longer knows about (gym removed). Shown so they can be cleared.
   const goneIds = filters.saved && filters.q === ''
@@ -57,14 +59,14 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
 
   const results = useMemo(() => {
     const pool = filters.saved ? data.listings.filter((g) => favourites.includes(g.id)) : data.listings;
-    const matched = filterByText(pool, filters.q);
+    const matched = filterByRadius(filterByText(pool, filters.q), origin, filters.radius);
     // Always run the distance sort first: it adds distanceKm to each gym when
     // we know the ZIP, and gives the A to Z tie order the other sorts keep.
     const byDistance = sortByDistance(matched, origin);
     if (filters.sort === 'cheapest') return sortByCheapest(byDistance);
     if (filters.sort === 'featured') return sortByFeatured(byDistance);
     return byDistance;
-  }, [data.listings, filters.q, filters.sort, filters.saved, favourites, origin]);
+  }, [data.listings, filters.q, filters.sort, filters.saved, filters.radius, favourites, origin]);
 
   // How many gyms have each tag, for the "most popular tag" photo rule.
   const counts = useMemo(() => tagCounts(data.listings), [data.listings]);
@@ -102,6 +104,28 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
             onChange={(e) => update({ zip: e.target.value })}
             placeholder="e.g. 00619"
           />
+        </div>
+        <div className="field">
+          <label htmlFor="radius">Within</label>
+          <select
+            id="radius"
+            value={origin ? (filters.radius ?? '') : ''}
+            disabled={!origin}
+            aria-describedby={origin ? undefined : 'radius-hint'}
+            onChange={(e) => update({ radius: e.target.value === '' ? null : Number(e.target.value) })}
+          >
+            <option value="">Any distance</option>
+            {RADII.map((km) => (
+              <option key={km} value={km}>
+                {km} km
+              </option>
+            ))}
+          </select>
+          {!origin && (
+            <p id="radius-hint" className="hint">
+              {zipUnknown ? 'Pick a ZIP above to filter by distance' : 'Enter a ZIP to filter by distance'}
+            </p>
+          )}
         </div>
         <div className="field">
           <label htmlFor="sort">Sort by</label>
@@ -173,10 +197,24 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
 
       {data.status === 'ready' && results.length === 0 && goneIds.length === 0 && !(filters.saved && favourites.length === 0) && (
         <div className="notice">
-          <p>No gyms match "{filters.q}".</p>
-          <button type="button" onClick={() => update({ q: '' })}>
-            Clear search
-          </button>
+          {radiusOn ? (
+            <>
+              <p>
+                No gyms within {filters.radius} km of {zipCode}
+                {filters.q ? ` match "${filters.q}"` : ''}.
+              </p>
+              <button type="button" onClick={() => update({ radius: null })}>
+                Show any distance
+              </button>
+            </>
+          ) : (
+            <>
+              <p>No gyms match "{filters.q}".</p>
+              <button type="button" onClick={() => update({ q: '' })}>
+                Clear search
+              </button>
+            </>
+          )}
         </div>
       )}
 

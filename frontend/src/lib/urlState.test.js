@@ -8,11 +8,12 @@ describe('parseSearch', () => {
       zip: '00619',
       sort: 'cheapest',
       saved: false,
+      radius: null,
     });
   });
 
   it('uses empty text and the default sort when nothing is there', () => {
-    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false });
+    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null });
   });
 
   it('ignores a sort value we do not know', () => {
@@ -30,7 +31,7 @@ describe('buildSearch', () => {
   });
 
   it('round-trips, including spaces and symbols', () => {
-    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true };
+    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10 };
     expect(parseSearch(buildSearch(filters))).toEqual(filters);
   });
 });
@@ -45,5 +46,22 @@ describe('saved flag', () => {
   it('writes saved=1 only when it is on', () => {
     expect(buildSearch({ q: '', zip: '', sort: 'featured', saved: true })).toBe('?saved=1');
     expect(buildSearch({ q: '', zip: '', sort: 'featured', saved: false })).toBe('');
+  });
+});
+
+describe('radius', () => {
+  it('reads the four allowed radii as numbers', () => {
+    for (const km of [5, 10, 25, 50]) expect(parseSearch(`?radius=${km}`).radius).toBe(km);
+  });
+
+  it('ignores missing, unknown or odd radius values', () => {
+    for (const bad of ['', '?radius=', '?radius=7', '?radius=abc', '?radius=-5', '?radius=10.0', '?radius=1e1']) {
+      expect(parseSearch(bad).radius).toBeNull();
+    }
+  });
+
+  it('writes radius only when one is picked', () => {
+    expect(buildSearch({ q: '', zip: '00619', sort: 'featured', radius: 10 })).toBe('?zip=00619&radius=10');
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', radius: null })).toBe('');
   });
 });

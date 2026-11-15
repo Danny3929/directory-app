@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { filterByText, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
+import { distanceKm } from './geo.js';
+import { filterByText, filterByRadius, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
 
 // Tiny invented gyms, just for these tests.
 const flex = { id: 1, name: 'Flex Gym', description: 'Weights and cardio', priceMin: 3000, isFeatured: false, lat: -1.29, lng: 36.78 };
@@ -85,5 +86,36 @@ describe('sortByCheapest', () => {
 describe('sortByFeatured', () => {
   it('puts featured gyms first and keeps data order inside each group', () => {
     expect(sortByFeatured([flex, box, yoga]).map((g) => g.id)).toEqual([2, 1, 3]);
+  });
+});
+
+describe('filterByRadius', () => {
+  const origin = { lat: -1.29, lng: 36.78 };
+  // About 1.1 km north of origin per 0.01 degrees of latitude.
+  const near = { id: 1, name: 'Near', lat: -1.28, lng: 36.78 }; // ~1.1 km
+  const mid = { id: 2, name: 'Mid', lat: -1.22, lng: 36.78 }; // ~7.8 km
+  const far = { id: 3, name: 'Far', lat: -1.0, lng: 36.78 }; // ~32 km
+  const noCoords = { id: 4, name: 'Nowhere' };
+  const list = [near, mid, far, noCoords];
+
+  it('keeps only gyms within the radius', () => {
+    expect(filterByRadius(list, origin, 5).map((g) => g.name)).toEqual(['Near']);
+    expect(filterByRadius(list, origin, 10).map((g) => g.name)).toEqual(['Near', 'Mid']);
+    expect(filterByRadius(list, origin, 50).map((g) => g.name)).toEqual(['Near', 'Mid', 'Far']);
+  });
+
+  it('counts a gym exactly on the line as inside', () => {
+    expect(filterByRadius([near], origin, distanceKm(-1.29, 36.78, -1.28, 36.78))).toHaveLength(1);
+  });
+
+  it('does nothing without a ZIP (no origin) or without a radius', () => {
+    expect(filterByRadius(list, null, 5)).toEqual(list);
+    expect(filterByRadius(list, origin, null)).toEqual(list);
+  });
+
+  it('does not change the list it is given', () => {
+    const copy = [...list];
+    filterByRadius(list, origin, 5);
+    expect(list).toEqual(copy);
   });
 });
