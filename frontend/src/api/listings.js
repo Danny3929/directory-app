@@ -1,7 +1,7 @@
 // Pretend server calls. There is no backend yet (that is Task 3), so these
 // read the local JSON files but behave like a network request: they take a
 // moment to answer and they can fail. That lets the search page show real
-// loading and error states now, and later we only swap these two functions.
+// loading and error states now, and later we only swap these functions.
 import listings from '../data/listings.json';
 import zips from '../data/zips.json';
 
@@ -33,5 +33,14 @@ export function fetchZips(options = {}) {
   return fakeRequest(zips, {
     ...options,
     errorMessage: 'Could not load ZIP codes. Please try again.',
+  });
+}
+
+// One gym by id, or null when there is no such gym (the page shows "not found").
+export function fetchListing(id, options = {}) {
+  const gym = listings.find((g) => g.id === id) ?? null;
+  return fakeRequest(gym, {
+    ...options,
+    errorMessage: 'Could not load this gym. Please try again.',
   });
 }

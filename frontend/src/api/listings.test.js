@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fetchListings, fetchZips } from './listings.js';
+import { fetchListings, fetchListing, fetchZips } from './listings.js';
 import listings from '../data/listings.json';
 import zips from '../data/zips.json';
 
@@ -49,5 +49,28 @@ describe('fetchZips', () => {
   it('can fail on purpose too', async () => {
     await expect(fetchZips({ delayMs: 0, fail: true }))
       .rejects.toThrow('Could not load ZIP codes. Please try again.');
+  });
+});
+
+describe('fetchListing', () => {
+  it('returns the one gym with that id', async () => {
+    const gym = await fetchListing(2, { delayMs: 0 });
+    expect(gym).toEqual(listings.find((g) => g.id === 2));
+  });
+
+  it('returns null when no gym has that id', async () => {
+    expect(await fetchListing(99999, { delayMs: 0 })).toBeNull();
+  });
+
+  it('fails on purpose with a friendly message when asked to', async () => {
+    await expect(fetchListing(2, { delayMs: 0, fail: true }))
+      .rejects.toThrow('Could not load this gym. Please try again.');
+  });
+
+  it('gives a copy, so changing the result does not change the data', async () => {
+    const gym = await fetchListing(2, { delayMs: 0 });
+    gym.name = 'Changed';
+    const again = await fetchListing(2, { delayMs: 0 });
+    expect(again.name).not.toBe('Changed');
   });
 });
