@@ -411,3 +411,32 @@ button {
   width: 20px;
   height: 20px;
 }
+
+/* Top menu on every page. The page you are on gets aria-current="page"
+   from NavLink, so the style follows the same signal screen readers get. */
+.site-nav {
+  display: flex;
+  gap: var(--space-sm);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-sm) var(--space-md) 0;
+}
+
+.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-size);
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Filled, not only a colour change, so the current page is clear to everyone. */
+.site-nav a[aria-current='page'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}

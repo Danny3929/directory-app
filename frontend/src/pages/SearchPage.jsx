@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useNavigationType, useSearchParams } from 'react-router';
 import { fetchListings, fetchZips } from '../api/listings.js';
 import { filterByText, filterByRadius, filterByTags, filterByPrice, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
 import { parseSearch, buildSearch, RADII } from '../lib/urlState.js';
@@ -21,11 +22,17 @@ const toPrice = (text) => {
 };
 
 export default function SearchPage({ favourites = [], onToggleFavourite }) {
-  // The search choices live in the address bar too, so links can be shared.
-  const [filters, setFilters] = useState(() => parseSearch(window.location.search));
+  // The search choices live in the address bar too (?q=box&zip=00619...), so
+  // links can be shared and reloads keep them. useSearchParams reads and writes it.
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const navigationType = useNavigationType();
+  // The page keeps its own copy, so typing is instant: the router updates the
+  // address a moment later (it uses React transitions).
+  const [filters, setFilters] = useState(() => parseSearch(searchParams));
   // Demo switch: opening the page with ?fail=1 makes the first load fail,
   // so the error state can be shown. "Try again" then works.
-  const [demoFail] = useState(() => new URLSearchParams(window.location.search).get('fail') === '1');
+  const [demoFail] = useState(() => searchParams.get('fail') === '1');
   const [attempt, setAttempt] = useState(0);
   const [data, setData] = useState({ status: 'loading', listings: [], zips: [], error: '' });
 
@@ -45,10 +52,15 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
     };
   }, [attempt, demoFail]);
 
-  // replaceState rewrites the address without adding a Back-button step per keystroke.
+  // Write the choices into the address. replace: true means no extra
+  // Back-button step for every letter typed. navigate() keeps buildSearch's
+  // plain commas (?tags=boxing,yoga); setSearchParams would write %2C.
+  const wanted = buildSearch(filters);
   useEffect(() => {
-    window.history.replaceState(null, '', window.location.pathname + buildSearch(filters));
-  }, [filters]);
+    if (wanted !== window.location.search) navigate({ search: wanted }, { replace: true });
+    // Only when the choices change; the address catching up must not write again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wanted]);
 
   const retry = () => {
     setData((old) => ({ ...old, status: 'loading' }));
@@ -62,6 +74,17 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   // Debounce (Dan's spec): the box shows each letter at once (text), but the list
   // and address (filters.q) only change after SEARCH_DELAY_MS with no new letter.
   const [text, setText] = useState(filters.q);
+
+  // The address changed from outside this page: a link (PUSH, e.g. "Find a gym"
+  // in the menu) or Back/Forward (POP). Take the choices from it. Our own writes
+  // are REPLACE and are skipped, so they never undo what the visitor just typed.
+  useEffect(() => {
+    if (navigationType === 'REPLACE') return;
+    const fromAddress = parseSearch(searchParams);
+    setFilters((old) => (buildSearch(old) === buildSearch(fromAddress) ? old : fromAddress));
+    setText(fromAddress.q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   useEffect(() => {
     // Every new letter cancels the old timer (cleanup below) and starts a new one.
     const timer = setTimeout(() => {

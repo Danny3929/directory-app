@@ -46,9 +46,10 @@ export function fetchTagCounts(options = {}) {
   });
 }
 
-// One gym by id, or null when there is no such gym (the page shows "not found").
-export function fetchListing(id, options = {}) {
-  const gym = listings.find((g) => g.id === id) ?? null;
+// One gym by its slug (the name part of /listing/baobab-barbell), or null when
+// there is no such gym (the page shows "not found").
+export function fetchListing(slug, options = {}) {
+  const gym = listings.find((g) => g.slug === slug) ?? null;
   return fakeRequest(gym, {
     ...options,
     errorMessage: 'Could not load this gym. Please try again.',

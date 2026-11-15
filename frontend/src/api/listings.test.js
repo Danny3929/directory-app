@@ -53,24 +53,26 @@ describe('fetchZips', () => {
 });
 
 describe('fetchListing', () => {
-  it('returns the one gym with that id', async () => {
-    const gym = await fetchListing(2, { delayMs: 0 });
-    expect(gym).toEqual(listings.find((g) => g.id === 2));
+  it('returns the one gym with that slug', async () => {
+    const gym = await fetchListing(listings[1].slug, { delayMs: 0 });
+    expect(gym).toEqual(listings[1]);
   });
 
-  it('returns null when no gym has that id', async () => {
-    expect(await fetchListing(99999, { delayMs: 0 })).toBeNull();
+  it('returns null when no gym has that slug', async () => {
+    expect(await fetchListing('no-such-gym', { delayMs: 0 })).toBeNull();
+    // An old id-style lookup must not match anything either.
+    expect(await fetchListing(2, { delayMs: 0 })).toBeNull();
   });
 
   it('fails on purpose with a friendly message when asked to', async () => {
-    await expect(fetchListing(2, { delayMs: 0, fail: true }))
+    await expect(fetchListing(listings[1].slug, { delayMs: 0, fail: true }))
       .rejects.toThrow('Could not load this gym. Please try again.');
   });
 
   it('gives a copy, so changing the result does not change the data', async () => {
-    const gym = await fetchListing(2, { delayMs: 0 });
+    const gym = await fetchListing(listings[1].slug, { delayMs: 0 });
     gym.name = 'Changed';
-    const again = await fetchListing(2, { delayMs: 0 });
+    const again = await fetchListing(listings[1].slug, { delayMs: 0 });
     expect(again.name).not.toBe('Changed');
   });
 });

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
+import { BrowserRouter } from 'react-router';
 import SearchPage from './SearchPage.jsx';
 import { fetchListings, fetchZips } from '../api/listings.js';
 
@@ -12,9 +13,12 @@ vi.mock('../api/listings.js', () => ({
 }));
 
 const gym = (id, name, lat, lng, priceKsh, featured = false) => ({
-  id, name, description: `${name} description`, tags: ['classes'],
+  id, name, slug: name.toLowerCase().replace(/ /g, '-'), description: `${name} description`, tags: ['classes'],
   address: '1 Test Rd', area: 'Kilimani', city: 'Nairobi', priceMin: priceKsh, priceMax: priceKsh, isFeatured: featured, lat, lng,
 });
+
+// The real browser router, so the tests can keep checking window.location.
+const show = (ui) => render(<BrowserRouter>{ui}</BrowserRouter>);
 
 const gyms = [
   gym(1, 'Alpha Gym', -1.29, 36.78, 3000),
@@ -50,7 +54,7 @@ afterEach(() => {
 describe('SearchPage search box waits for a pause (debounce, Dan picked 0.3 s)', () => {
   // Data loads with the real clock; only then do we take over the clock.
   const ready = async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     vi.useFakeTimers();
   };
@@ -100,14 +104,14 @@ describe('SearchPage search box waits for a pause (debounce, Dan picked 0.3 s)',
 
 describe('SearchPage photos', () => {
   it('has a top band with the headline; its photo is decorative (empty alt)', async () => {
-    const { container } = render(<SearchPage />);
+    const { container } = show(<SearchPage />);
     expect(screen.getByRole('heading', { level: 1, name: /find a gym in nairobi/i })).toBeTruthy();
     expect(container.querySelector('.hero-photo').getAttribute('alt')).toBe('');
     await screen.findByText('Alpha Gym');
   });
 
   it('puts a lazy-loaded photo with alt text on every card', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     const photos = screen.getAllByRole('img', { name: /fitness class/i });
     expect(photos).toHaveLength(3);
@@ -117,7 +121,7 @@ describe('SearchPage photos', () => {
   it('shows the photo of the tag the visitor searched for', async () => {
     // classes is on 2 gyms, boxing on 1, so classes is more popular.
     fetchListings.mockResolvedValue([gyms[0], { ...gyms[2], tags: ['classes', 'boxing'] }]);
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gamma Boxing');
     expect(screen.getAllByRole('img', { name: /fitness class/i })).toHaveLength(2);
     searchNow('boxing');
@@ -127,7 +131,7 @@ describe('SearchPage photos', () => {
 
 describe('SearchPage', () => {
   it('shows a loading message, then the gyms', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     expect(screen.getByText(/loading gyms/i)).toBeTruthy();
     await screen.findByText('Alpha Gym');
     expect(screen.queryByText(/loading gyms/i)).toBeNull();
@@ -135,7 +139,7 @@ describe('SearchPage', () => {
   });
 
   it('filters by text and writes the search into the address', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     searchNow('box');
     expect(names()).toEqual(['Gamma Boxing']);
@@ -144,14 +148,14 @@ describe('SearchPage', () => {
 
   it('opens a shared link with the same search', async () => {
     window.history.replaceState(null, '', '/?q=gym&sort=cheapest');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(screen.getByLabelText(/search gyms/i).value).toBe('gym');
     expect(names()).toEqual(['Beta Gym', 'Alpha Gym']);
   });
 
   it('shows an empty state with a way back', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     searchNow('zzz');
     expect(screen.getByText(/no gyms match/i)).toBeTruthy();
@@ -163,7 +167,7 @@ describe('SearchPage', () => {
 
   it('shows an error with Try again, and recovers', async () => {
     fetchListings.mockRejectedValueOnce(new Error('Could not load gyms. Please try again.'));
-    render(<SearchPage />);
+    show(<SearchPage />);
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('Could not load gyms');
     expect(names()).toHaveLength(0);
@@ -175,7 +179,7 @@ describe('SearchPage', () => {
 
   it('says an unknown ZIP is not recognised and lets the user pick one', async () => {
     window.history.replaceState(null, '', '/?sort=distance');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
 
     type(/your zip/i, '00999');
@@ -190,7 +194,7 @@ describe('SearchPage', () => {
   });
 
   it('does not call a half-typed ZIP invalid', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     type(/your zip/i, '006');
     expect(screen.queryByText(/we don't recognise/i)).toBeNull();
@@ -202,7 +206,7 @@ describe('SearchPage saved filter', () => {
   const box = () => screen.getByRole('checkbox', { name: /saved only/i });
 
   it('shows only saved gyms and writes saved=1 into the address', async () => {
-    render(<SearchPage favourites={[2]} onToggleFavourite={() => {}} />);
+    show(<SearchPage favourites={[2]} onToggleFavourite={() => {}} />);
     await screen.findByText('Alpha Gym');
     fireEvent.click(box());
     expect(names()).toEqual(['Beta Gym']);
@@ -211,7 +215,7 @@ describe('SearchPage saved filter', () => {
 
   it('opens a shared saved link with the box ticked', async () => {
     window.history.replaceState(null, '', '/?saved=1');
-    render(<SearchPage favourites={[3]} onToggleFavourite={() => {}} />);
+    show(<SearchPage favourites={[3]} onToggleFavourite={() => {}} />);
     await screen.findByText('Gamma Boxing');
     expect(box().checked).toBe(true);
     expect(names()).toEqual(['Gamma Boxing']);
@@ -219,7 +223,7 @@ describe('SearchPage saved filter', () => {
 
   it('explains an empty saved list and offers all gyms', async () => {
     window.history.replaceState(null, '', '/?saved=1');
-    render(<SearchPage favourites={[]} onToggleFavourite={() => {}} />);
+    show(<SearchPage favourites={[]} onToggleFavourite={() => {}} />);
     await screen.findByText(/no saved gyms yet/i);
     fireEvent.click(screen.getByRole('button', { name: /show all gyms/i }));
     await screen.findByText('Alpha Gym');
@@ -229,7 +233,7 @@ describe('SearchPage saved filter', () => {
   it('shows a "no longer available" card for a saved gym that is gone, and lets you remove it', async () => {
     window.history.replaceState(null, '', '/?saved=1');
     const onToggle = vi.fn();
-    render(<SearchPage favourites={[99]} onToggleFavourite={onToggle} />);
+    show(<SearchPage favourites={[99]} onToggleFavourite={onToggle} />);
     await screen.findByText(/no longer available/i);
     fireEvent.click(screen.getByRole('button', { name: /remove from saved/i }));
     expect(onToggle).toHaveBeenCalledWith(99);
@@ -237,7 +241,7 @@ describe('SearchPage saved filter', () => {
 
   it('combines with the text search', async () => {
     window.history.replaceState(null, '', '/?saved=1&q=alpha');
-    render(<SearchPage favourites={[1, 2]} onToggleFavourite={() => {}} />);
+    show(<SearchPage favourites={[1, 2]} onToggleFavourite={() => {}} />);
     await screen.findByText('Alpha Gym');
     expect(names()).toEqual(['Alpha Gym']);
   });
@@ -249,7 +253,7 @@ describe('SearchPage radius filter (Dan spec 2026-11-15)', () => {
   const radius = () => screen.getByLabelText(/within/i);
 
   it('starts on Any distance, disabled until a ZIP is known, with a hint', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(radius().value).toBe('');
     expect(radius().disabled).toBe(true);
@@ -259,7 +263,7 @@ describe('SearchPage radius filter (Dan spec 2026-11-15)', () => {
 
   it('filters by distance once a ZIP is entered and writes ?radius= into the address', async () => {
     fetchListings.mockResolvedValue(withFar());
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Delta Gym');
     type(/your zip/i, '00619');
     expect(radius().disabled).toBe(false);
@@ -277,7 +281,7 @@ describe('SearchPage radius filter (Dan spec 2026-11-15)', () => {
   it('opens a shared radius link with the same filter', async () => {
     fetchListings.mockResolvedValue(withFar());
     window.history.replaceState(null, '', '/?zip=00619&radius=10');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(radius().value).toBe('10');
     expect(names()).not.toContain('Delta Gym');
@@ -286,7 +290,7 @@ describe('SearchPage radius filter (Dan spec 2026-11-15)', () => {
   it('treats an unknown ZIP like no ZIP: radius off, all gyms, Did you mean list stays', async () => {
     fetchListings.mockResolvedValue(withFar());
     window.history.replaceState(null, '', '/?zip=99999&radius=5');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Delta Gym');
     expect(names()).toHaveLength(4);
     expect(radius().disabled).toBe(true);
@@ -303,7 +307,7 @@ describe('SearchPage radius filter (Dan spec 2026-11-15)', () => {
 
   it('says when nothing is inside the radius and offers Any distance', async () => {
     fetchListings.mockResolvedValue([gym(4, 'Delta Gym', -1.2, 36.9, 1500)]);
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Delta Gym');
     type(/your zip/i, '00619');
     type(/within/i, '5');
@@ -326,7 +330,7 @@ describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle c
   beforeEach(() => fetchListings.mockResolvedValue(tagged()));
 
   it('shows one chip per tag with how many gyms have it, none pressed', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(chip('boxing').textContent).toMatch(/Boxing\s*\(2\)/);
     expect(chip('strength').textContent).toMatch(/\(1\)/);
@@ -334,7 +338,7 @@ describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle c
   });
 
   it('pressing a chip filters the list and writes ?tags=; pressing again undoes it', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     fireEvent.click(chip('boxing'));
     expect(chip('boxing').getAttribute('aria-pressed')).toBe('true');
@@ -347,7 +351,7 @@ describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle c
   });
 
   it('needs ALL pressed tags, and keeps them A to Z in the address', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     fireEvent.click(chip('strength'));
     fireEvent.click(chip('boxing'));
@@ -357,7 +361,7 @@ describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle c
 
   it('opens a shared tags link with the same chips pressed', async () => {
     window.history.replaceState(null, '', '/?tags=boxing,strength');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(chip('boxing').getAttribute('aria-pressed')).toBe('true');
     expect(chip('strength').getAttribute('aria-pressed')).toBe('true');
@@ -365,7 +369,7 @@ describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle c
   });
 
   it('says when no gym has all the tags and offers to clear them', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     fireEvent.click(chip('boxing'));
     fireEvent.click(chip('yoga'));
@@ -378,7 +382,7 @@ describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle c
 
   it('ignores a tag in the link that no gym has, instead of showing nothing', async () => {
     window.history.replaceState(null, '', '/?tags=sauna');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(names()).toHaveLength(3);
     expect(screen.queryByRole('button', { name: /^sauna/i })).toBeNull();
@@ -394,14 +398,14 @@ describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overla
   beforeEach(() => fetchListings.mockResolvedValue(priced()));
 
   it('has labelled Min and Max boxes that start empty', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(screen.getByLabelText(/min ksh/i).value).toBe('');
     expect(screen.getByLabelText(/max ksh/i).value).toBe('');
   });
 
   it('a Max keeps gyms whose cheapest plan fits, marks them, and writes ?max=', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     type(/max ksh/i, '4000');
     expect(names()).toEqual(expect.arrayContaining(['Alpha Gym', 'Beta Gym']));
@@ -412,7 +416,7 @@ describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overla
   });
 
   it('a Min keeps gyms whose dearest plan reaches it', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     type(/min ksh/i, '6000');
     expect(names()).toEqual(['Gamma Gym']);
@@ -420,7 +424,7 @@ describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overla
   });
 
   it('drops letters and commas as you type, so "4,000" means 4000', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     type(/max ksh/i, '4,0a00');
     expect(screen.getByLabelText(/max ksh/i).value).toBe('4000');
@@ -429,7 +433,7 @@ describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overla
 
   it('opens a shared price link with the same boxes filled in', async () => {
     window.history.replaceState(null, '', '/?min=2000&max=6000');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Beta Gym');
     expect(screen.getByLabelText(/min ksh/i).value).toBe('2000');
     expect(screen.getByLabelText(/max ksh/i).value).toBe('6000');
@@ -438,7 +442,7 @@ describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overla
 
   it('says when Min is more than Max and leaves the price filter off', async () => {
     window.history.replaceState(null, '', '/?min=6000&max=2000');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(screen.getByText(/min is more than max/i)).toBeTruthy();
     expect(names()).toHaveLength(3);
@@ -446,7 +450,7 @@ describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overla
   });
 
   it('says when no gym has a plan in the range and offers to clear it', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     type(/min ksh/i, '5500');
     type(/max ksh/i, '7500');
@@ -469,7 +473,7 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
   beforeEach(() => fetchListings.mockResolvedValue(many()));
 
   it('shows the first 12 and says how many there are in all', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gym 01');
     expect(names()).toHaveLength(12);
     expect(names()[11]).toBe('Gym 12');
@@ -477,7 +481,7 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
   });
 
   it('Load more adds the next 12, writes ?page=2 and moves focus to the first new gym', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gym 01');
     loadMore();
     expect(names()).toHaveLength(24);
@@ -486,7 +490,7 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
   });
 
   it('hides Load more once every gym is showing', async () => {
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gym 01');
     loadMore();
     loadMore();
@@ -497,7 +501,7 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
 
   it('Dan’s case: 36 showing, then tick Boxing, goes back to the first 12', async () => {
     window.history.replaceState(null, '', '/?page=3');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gym 01');
     expect(names()).toHaveLength(30);
     fireEvent.click(screen.getByRole('button', { name: /boxing/i }));
@@ -509,7 +513,7 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
   it('a new search word also goes back to 12, after the 0.3 s pause', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     window.history.replaceState(null, '', '/?page=2');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gym 01');
     expect(names()).toHaveLength(24);
     type(/search gyms/i, 'gym');
@@ -520,7 +524,7 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
 
   it('a shared ?page=2 link opens with 24 gyms', async () => {
     window.history.replaceState(null, '', '/?page=2');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gym 01');
     expect(names()).toHaveLength(24);
     expect(screen.getByText('Showing 24 of 30 gyms')).toBeTruthy();
@@ -528,14 +532,14 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
 
   it('a bad ?page= value shows the first 12', async () => {
     window.history.replaceState(null, '', '/?page=abc');
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Gym 01');
     expect(names()).toHaveLength(12);
   });
 
   it('no Load more button when 12 or fewer gyms match', async () => {
     fetchListings.mockResolvedValue(structuredClone(gyms));
-    render(<SearchPage />);
+    show(<SearchPage />);
     await screen.findByText('Alpha Gym');
     expect(screen.queryByRole('button', { name: /load more/i })).toBeNull();
   });

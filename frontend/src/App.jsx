@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react';
+import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router';
 import SearchPage from './pages/SearchPage.jsx';
 import DetailPage from './pages/DetailPage.jsx';
-import { parseRoute } from './lib/route.js';
+import FavouritesPage from './pages/FavouritesPage.jsx';
 import { loadFavourites, saveFavourites, toggleFavourite } from './lib/favourites.js';
 import './App.css';
 
+// The router itself (BrowserRouter) is in main.jsx, so tests can start
+// the app at any address.
 export default function App() {
-  // The page comes from the part of the address after the #.
-  const [route, setRoute] = useState(() => parseRoute(window.location.hash));
-  // One saved list for the whole app, so the card and the detail page agree.
+  // One saved list for the whole app, so cards, the detail page and the
+  // saved gyms page all agree.
   const [favourites, setFavourites] = useState(loadFavourites);
-
-  useEffect(() => {
-    const onChange = () => setRoute(parseRoute(window.location.hash));
-    window.addEventListener('hashchange', onChange);
-    return () => window.removeEventListener('hashchange', onChange);
-  }, []);
 
   const toggle = (id) => {
     const next = toggleFavourite(favourites, id);
@@ -23,28 +19,46 @@ export default function App() {
     saveFavourites(next);
   };
 
-  if (route.page === 'gym') {
-    return (
-      <DetailPage
-        gymId={route.id}
-        isFavourite={favourites.includes(route.id)}
-        onToggleFavourite={() => toggle(route.id)}
-      />
-    );
-  }
+  // A new page starts at the top (the browser would keep the old scroll position).
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo?.(0, 0);
+  }, [pathname]);
 
-  if (route.page === 'notfound') {
-    return (
-      <main className="page">
-        <a className="back-link" href="#/">
-          ← Back to search
-        </a>
-        <div className="notice">
-          <p>Page not found.</p>
-        </div>
-      </main>
-    );
-  }
+  return (
+    <>
+      {/* NavLink adds aria-current="page" to the link for the page you are on. */}
+      <nav className="site-nav" aria-label="Main">
+        <NavLink to="/" end>
+          Find a gym
+        </NavLink>
+        <NavLink to="/favourites">Saved gyms ({favourites.length})</NavLink>
+      </nav>
+      <Routes>
+        <Route path="/" element={<SearchPage favourites={favourites} onToggleFavourite={toggle} />} />
+        <Route path="/listing/:slug" element={<DetailRoute favourites={favourites} onToggleFavourite={toggle} />} />
+        <Route path="/favourites" element={<FavouritesPage favourites={favourites} onToggleFavourite={toggle} />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+}
 
-  return <SearchPage favourites={favourites} onToggleFavourite={toggle} />;
+// Reads :slug from the address and hands it to the detail page.
+function DetailRoute(props) {
+  const { slug } = useParams();
+  return <DetailPage slug={slug} {...props} />;
+}
+
+function NotFound() {
+  return (
+    <main className="page">
+      <Link className="back-link" to="/">
+        ← Back to search
+      </Link>
+      <div className="notice">
+        <p>Page not found.</p>
+      </div>
+    </main>
+  );
 }

@@ -1,3 +1,4 @@
+import { Link, useLocation } from 'react-router';
 import { gymPath } from '../lib/route.js';
 import { formatPrice, formatKsh } from '../lib/price.js';
 import FavouriteButton from './FavouriteButton.jsx';
@@ -8,6 +9,8 @@ import FavouriteButton from './FavouriteButton.jsx';
 // overBudget is the visitor's Max when some of this gym's plans cost more (Dan's 'show, but mark it').
 export default function GymCard({ gym, image, overBudget = null, isFavourite = false, onToggleFavourite }) {
   const hasDistance = Number.isFinite(gym.distanceKm);
+  // The link remembers this page (with its ?search), so Back on the detail page returns here.
+  const here = useLocation();
 
   return (
     <li className="card">
@@ -17,7 +20,9 @@ export default function GymCard({ gym, image, overBudget = null, isFavourite = f
       )}
       <div className="card-top">
         <h3>
-          <a href={gymPath(gym.id)}>{gym.name}</a>
+          <Link to={gymPath(gym.slug)} state={{ from: here.pathname + here.search }}>
+            {gym.name}
+          </Link>
         </h3>
         {gym.isFeatured && <span className="badge">Featured</span>}
         {onToggleFavourite && (

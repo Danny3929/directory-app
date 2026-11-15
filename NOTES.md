@@ -100,3 +100,15 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Accessibility: after Load more, keyboard focus moves to the first new gym's link, so keyboard and screen-reader users carry on from there instead of staying on the button (which also vanishes on the last page).
 - Tests: 11 new, 3 older URL tests updated (179 in total). Broke the code twice on purpose (no reset to page 1 in `update()`; no focus move) and the tests caught both.
 - Real-browser check (`tools/scratch/loadmorecheck.mjs`, headless Chrome at 390px): 12 → 24 → 36 → 45 with `?page=2/3/4`, focus on Baobab Barbell, Harambee Health Club, Urban Orbit Gym; button gone at 45; reload kept 45; ticking Boxing gave 5 gyms and `?tags=boxing`.
+
+## Slice notes: React Router pages (2026-11-15)
+- Checked first: `react-router` 8.5.1, updated 27 Oct 2026, by the Remix team, 0 audit problems. In v7 and later, `react-router-dom` was folded into `react-router`. The guide says v6, but v8 is the current version and has the same parts (BrowserRouter, Routes, Link, useSearchParams).
+- Addresses: `/` search, `/listing/:slug` one gym, `/favourites` saved gyms, anything else "Page not found". The old `#/gym/2` addresses are gone.
+- Back keeps the search: a card link carries a note of the page it was on (`state: { from: '/?q=box' }`). The detail page's Back link goes there, and says "Back to saved gyms" when you came from that page. A shared link has no note, so Back goes to `/`. Only our own two list pages are trusted as a "from", so a strange note can't send anyone to another site (`backLink` in `lib/route.js`).
+- Mistake caught by a test: `setSearchParams` writes `?tags=boxing%2Cstrength`. We write the address with `navigate({ search }, { replace: true })` to keep the plain comma, and read it with `useSearchParams`.
+- Router updates are React transitions (they land a moment later), so the search page keeps its own copy of the choices for instant typing. It only takes choices from the address after a link (PUSH) or Back/Forward (POP), never after its own writes (REPLACE). Test: "Find a gym" in the menu clears `/?q=alpha`.
+- A new page scrolls to the top; without it a gym opened from far down the list opened scrolled down.
+- Break checks: without reading the address on arrival, the "Find a gym" test failed; without the "from" note on the card link, both Back tests failed.
+- Checked in real Chrome at 390px: card -> detail -> Back to search kept `?q=fit&page=2` and the box text; browser Back/Forward; reload; heart -> Saved gyms (1) -> gym -> Back to saved gyms; fresh-tab `/listing/baobab-barbell`; unknown gym and unknown page.
+- Still to do for deploy (step 11): Vercel needs a `vercel.json` rewrite, or `/listing/...` gives 404 on reload. `vite preview` already does this locally.
+- Open question for Dan: keep the "Saved only" tick box on the search page now that there is a Saved gyms page, or remove it?
