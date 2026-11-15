@@ -26,3 +26,9 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - AI mistake: first version set state at the top of an effect (lint warning `set-state-in-effect`). Moved "loading" into the Try again click.
 - AI mistake: the last commit was 723 lines (page, card, styles, tests together); the commit hook warned. Rule: split page, component and styles into separate commits.
 - Not yet checked: how the page looks on screen (screenshot was not allowed), keyboard-only walkthrough, real phone.
+
+## Slice notes: favourites, routing, fetchListing (2026-11-15)
+- My first break check on `favourites.js` proved nothing: removing the `Array.isArray` guard still gave `[]` because the `catch` caught the crash. Lesson: after a break check, confirm a test really failed. I committed before re-checking and fixed it right after.
+- `favourites.test.js` first failed with "localStorage is not defined": tests that touch the browser need `// @vitest-environment jsdom` on line 1.
+- My `fetchListing` tests and code were written together, so I never saw the tests fail first. I proved them with two break checks afterwards.
+- Decisions (Dan): favourites store ids only; a saved gym that no longer exists shows a "no longer available" card with Remove; Back keeps the same search (search choices live in `?q=`, the page lives in `#/`).
