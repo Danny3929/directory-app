@@ -72,8 +72,12 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
   const shownFile = image?.src.split('/').pop();
   const photos = gym ? [shownFile, ...(gym.photos ?? []).filter((f) => f !== shownFile)] : [];
 
+  const titles = { loading: 'Loading gym', error: 'Could not load gym', notfound: 'Gym not found' };
+
   return (
     <main className="page">
+      {/* React moves <title> into the page head: it is the browser tab's name. */}
+      <title>{`${status === 'ready' ? gym.name : titles[status]} | Nairobi gyms`}</title>
       {/* Goes back to the same search (or saved gyms) the visitor came from. */}
       <Link className="back-link" to={back.to}>
         ← {back.label}
@@ -92,6 +96,7 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
 
       {status === 'notfound' && (
         <div className="notice">
+          <h1>Gym not found</h1>
           <p>We could not find that gym. It may have been removed.</p>
         </div>
       )}

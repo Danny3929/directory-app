@@ -100,6 +100,7 @@ describe('DetailPage', () => {
     fetchListing.mockResolvedValue(null);
     show({ slug: 'no-such-gym' });
     await screen.findByText(/we could not find that gym/i);
+    expect(screen.getByRole('heading', { level: 1, name: /gym not found/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /back to search/i })).toBeTruthy();
   });
 

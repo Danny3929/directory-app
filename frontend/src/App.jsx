@@ -53,11 +53,13 @@ function DetailRoute(props) {
 function NotFound() {
   return (
     <main className="page">
+      <title>Page not found | Nairobi gyms</title>
       <Link className="back-link" to="/">
         ← Back to search
       </Link>
       <div className="notice">
-        <p>Page not found.</p>
+        <h1>Page not found</h1>
+        <p>That address does not match any page here.</p>
       </div>
     </main>
   );

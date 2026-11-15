@@ -68,8 +68,21 @@ describe('App routing', () => {
 
   it('shows a not-found page with a way back for an unknown address', async () => {
     openAt('/nonsense');
-    expect(screen.getByText(/page not found/i)).toBeTruthy();
+    // A main heading, so screen-reader users jumping by headings hear what page this is.
+    expect(screen.getByRole('heading', { level: 1, name: /page not found/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /back to search/i }).getAttribute('href')).toBe('/');
+  });
+
+  // The browser tab (and a screen reader, on each new page) says which page you are on.
+  it.each([
+    ['/', 'Find a gym in Nairobi'],
+    ['/favourites', 'Saved gyms | Nairobi gyms'],
+    ['/listing/beta-gym', 'Beta Gym | Nairobi gyms'],
+    ['/listing/no-such-gym', 'Gym not found | Nairobi gyms'],
+    ['/nonsense', 'Page not found | Nairobi gyms'],
+  ])('the tab title for %s is "%s"', async (url, title) => {
+    openAt(url);
+    await vi.waitFor(() => expect(document.title).toBe(title));
   });
 
   it('"Find a gym" in the menu starts a fresh search, even from a search', async () => {

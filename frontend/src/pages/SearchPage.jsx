@@ -154,6 +154,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
 
   return (
     <main className="page">
+      <title>Find a gym in Nairobi</title>
       <header className="hero">
         {/* Decorative: the headline says it all, so the photo has empty alt text. */}
         <img className="hero-photo" src={`${import.meta.env.BASE_URL}images/hero.webp`} alt="" width="1600" height="640" fetchPriority="high" />

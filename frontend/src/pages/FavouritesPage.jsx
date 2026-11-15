@@ -36,6 +36,7 @@ export default function FavouritesPage({ favourites = [], onToggleFavourite }) {
 
   return (
     <main className="page">
+      <title>Saved gyms | Nairobi gyms</title>
       <h1>Saved gyms</h1>
 
       {data.status === 'loading' && (

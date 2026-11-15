@@ -17,7 +17,8 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - 2026-11-15: Said Task 2 only needed a README and Vercel. Checking against the guide showed radius, tag and price filters, debounce, 12 per page, `/listing/:slug` with React Router, gallery, similar listings, enquiry form, Favourites page and `vercel.json` were all missing. The AI had also suggested `#/gym/N` addresses instead of the React Router the guide asks for. Rule: check every guide requirement before calling a task nearly done.
 
 ## Accessibility problems found
-- (none yet)
+- 2026-11-15 (step 9 check): "Page not found" and "gym not found" had no main heading (`h1`), so screen-reader users jumping by headings heard nothing. Both now have one.
+- 2026-11-15 (step 9 check): the browser tab said "frontend" (left from the Vite starter) on every page. Each page now sets its own title, e.g. "Flexline Fitness | Nairobi gyms". React 19 moves a `<title>` written inside a page into the page head.
 
 ## Bugs and causes
 - (none yet)
@@ -121,3 +122,10 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - The form is UI only and says so. Errors show only after the first Send, are linked to their box with `aria-describedby`, and focus goes to the first wrong box. Task 3's Django endpoint must check all of it again: browser checks can be skipped.
 - Bug caught by a test: on Try again the Similar gyms section vanished while loading, which drops keyboard focus. It now stays with "Loading similar gyms…".
 - Known limit: we only have 9 stock photos, so similar gyms often show the same photo (e.g. three spin gyms). Task 3 adds each gym's own uploads.
+
+## Slice notes: full check, step 9 (2026-11-15)
+- Tests 237 pass, lint clean, build works.
+- Real Chrome at 390px and 1280px (`tools/scratch/fullcheck.mjs`): Tab walk on search, detail and saved pages. Focus always visible, never lost, always on screen.
+- Keyboard only: typed a search, Enter on Load more (24 gyms, focus on gym 13), Enter on that gym, Back to search kept `?q=a&page=2`.
+- 11 shared links opened fresh (saved data cleared) and reloaded: filters, `?page=3`, `?page=abc`, min above max, unknown ZIP, no results, `?fail=1`, a gym, a missing gym, saved gyms, a missing page. All matched after reload, none scrolled sideways.
+- Not checked here: a real screen reader, and shared links on Vercel (needs the `vercel.json` rewrite in step 11).
