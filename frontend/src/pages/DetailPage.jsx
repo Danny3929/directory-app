@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import FavouriteButton from '../components/FavouriteButton.jsx';
-import { fetchListing, fetchTagCounts } from '../api/listings.js';
+import GymCard from '../components/GymCard.jsx';
+import PhotoGallery from '../components/PhotoGallery.jsx';
+import EnquiryForm from '../components/EnquiryForm.jsx';
+import { fetchListing, fetchSimilarListings, fetchTagCounts } from '../api/listings.js';
 import { gymImage } from '../lib/gymImage.js';
 import { formatPrice } from '../lib/price.js';
 import { parseSearch } from '../lib/urlState.js';
@@ -17,6 +20,25 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ status: 'loading', gym: null, error: '' });
   const [counts, setCounts] = useState({});
+  // Similar gyms load on their own, so a failure there never hides the gym.
+  // Each answer remembers which load it belongs to; until the current one
+  // answers, the section shows 'loading' (no setState inside the effect).
+  const [similarTry, setSimilarTry] = useState(0);
+  const similarKey = `#`;
+  const [similarAnswer, setSimilarAnswer] = useState(null);
+  const similar =
+    similarAnswer?.key === similarKey ? similarAnswer : { status: 'loading', gyms: [] };
+
+  useEffect(() => {
+    let cancelled = false;
+    const key = `#`;
+    fetchSimilarListings(slug)
+      .then((gyms) => !cancelled && setSimilarAnswer({ key, status: 'ready', gyms }))
+      .catch((err) => !cancelled && setSimilarAnswer({ key, status: 'error', gyms: [], error: err.message }));
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, similarTry]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +66,11 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
 
   const { status, gym, error } = state;
   // The search the visitor came from (?q=) picks the same photo the card showed.
-  const image = gym && gymImage(gym, { query: parseSearch(searchOf(cameFrom)).q, counts });
+  const query = parseSearch(searchOf(cameFrom)).q;
+  const image = gym && gymImage(gym, { query, counts });
+  // The gallery starts on the photo the card showed, then the gym's others.
+  const shownFile = image?.src.split('/').pop();
+  const photos = gym ? [shownFile, ...(gym.photos ?? []).filter((f) => f !== shownFile)] : [];
 
   return (
     <main className="page">
@@ -83,7 +109,7 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
               />
             )}
           </div>
-          <img className="detail-photo" src={image.src} alt={image.alt} width="960" height="540" />
+          <PhotoGallery photos={photos} gymName={gym.name} />
           <p className="muted">
             {gym.address}, {gym.area}, {gym.city}
           </p>
@@ -99,6 +125,39 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
             </ul>
           )}
         </article>
+      )}
+
+      {status === 'ready' && <EnquiryForm key={slug} gymName={gym.name} />}
+
+      {/* Shown while loading or failed; hidden only once we know there are none. */}
+      {status === 'ready' && (similar.status !== 'ready' || similar.gyms.length > 0) && (
+        <section className="similar" aria-labelledby="similar-heading">
+          <h2 id="similar-heading">Similar gyms</h2>
+          {similar.status === 'loading' && <p role="status">Loading similar gyms…</p>}
+          {similar.status === 'error' && (
+            <div className="notice notice-error" role="alert">
+              <p>{similar.error}</p>
+              <button type="button" onClick={() => setSimilarTry((n) => n + 1)}>
+                Try again
+              </button>
+            </div>
+          )}
+          {similar.status === 'ready' && (
+            <ul className="gym-grid">
+              {similar.gyms.map((other) => (
+                <GymCard
+                  key={other.id}
+                  gym={other}
+                  image={gymImage(other, { query, counts })}
+                  isFavourite={favourites.includes(other.id)}
+                  onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(other.id))}
+                  // Keep the visitor's original search, so Back still goes there.
+                  from={back.to}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
       )}
     </main>
   );

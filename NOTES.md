@@ -112,3 +112,12 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Checked in real Chrome at 390px: card -> detail -> Back to search kept `?q=fit&page=2` and the box text; browser Back/Forward; reload; heart -> Saved gyms (1) -> gym -> Back to saved gyms; fresh-tab `/listing/baobab-barbell`; unknown gym and unknown page.
 - Still to do for deploy (step 11): Vercel needs a `vercel.json` rewrite, or `/listing/...` gives 404 on reload. `vite preview` already does this locally.
 - Decision (Dan): the "Saved only" tick box is removed; the Saved gyms page in the top menu is the one place for saved gyms. An old `?saved=1` link just shows all gyms. Its "no longer available" card now lives only on the Saved gyms page.
+
+## Slice notes: detail page gallery, similar gyms, enquiry form (2026-11-15)
+- Dan's choices: similar gyms = most shared tags first, ties nearest, then A to Z, at most 3, never the gym itself, none if no tag is shared (`lib/similar.js`). Form = name, email, message, all required, message at least 10 characters (`lib/enquiry.js`). A good Send shows a thank-you with "Send another".
+- The gallery starts on the photo the card showed, then the gym's other photos. Thumbnail buttons say "Show photo 2 of 3" and use `aria-pressed`; their images have `alt=""` so the label is not read twice.
+- Similar gyms come from `fetchSimilarListings(slug)` in `api/listings.js`, so Task 3 can let Django pick them. They load separately: if they fail, the gym still shows, with Try again in the Similar gyms section.
+- A similar gym's link passes on the visitor's original search, so Back still goes to `/?q=...`, not to the gym page they came through.
+- The form is UI only and says so. Errors show only after the first Send, are linked to their box with `aria-describedby`, and focus goes to the first wrong box. Task 3's Django endpoint must check all of it again: browser checks can be skipped.
+- Bug caught by a test: on Try again the Similar gyms section vanished while loading, which drops keyboard focus. It now stays with "Loading similar gyms…".
+- Known limit: we only have 9 stock photos, so similar gyms often show the same photo (e.g. three spin gyms). Task 3 adds each gym's own uploads.

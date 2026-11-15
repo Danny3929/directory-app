@@ -7,7 +7,8 @@ import FavouriteButton from './FavouriteButton.jsx';
 // distanceKm is there only when the visitor entered a known ZIP.
 // image is { src, alt } from gymImage(); the card works without it.
 // overBudget is the visitor's Max when some of this gym's plans cost more (Dan's 'show, but mark it').
-export default function GymCard({ gym, image, overBudget = null, isFavourite = false, onToggleFavourite }) {
+// from overrides the page the link remembers (similar gyms pass on the original search).
+export default function GymCard({ gym, image, overBudget = null, isFavourite = false, onToggleFavourite, from }) {
   const hasDistance = Number.isFinite(gym.distanceKm);
   // The link remembers this page (with its ?search), so Back on the detail page returns here.
   const here = useLocation();
@@ -20,7 +21,7 @@ export default function GymCard({ gym, image, overBudget = null, isFavourite = f
       )}
       <div className="card-top">
         <h3>
-          <Link to={gymPath(gym.slug)} state={{ from: here.pathname + here.search }}>
+          <Link to={gymPath(gym.slug)} state={{ from: from ?? here.pathname + here.search }}>
             {gym.name}
           </Link>
         </h3>

@@ -5,6 +5,7 @@
 import listings from '../data/listings.json';
 import zips from '../data/zips.json';
 import { tagCounts } from '../lib/gymImage.js';
+import { similarGyms } from '../lib/similar.js';
 
 const DEFAULT_DELAY_MS = 500;
 
@@ -53,5 +54,15 @@ export function fetchListing(slug, options = {}) {
   return fakeRequest(gym, {
     ...options,
     errorMessage: 'Could not load this gym. Please try again.',
+  });
+}
+
+// Up to 3 gyms like this one (Dan's rule in lib/similar.js), or [] for an
+// unknown slug. In Task 3 Django picks them, so the browser gets only 3 gyms.
+export function fetchSimilarListings(slug, options = {}) {
+  const gym = listings.find((g) => g.slug === slug);
+  return fakeRequest(gym ? similarGyms(gym, listings) : [], {
+    ...options,
+    errorMessage: 'Could not load similar gyms.',
   });
 }

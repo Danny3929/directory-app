@@ -10,6 +10,7 @@ vi.mock('./api/listings.js', () => ({
   fetchZips: vi.fn(),
   fetchListing: vi.fn(),
   fetchTagCounts: vi.fn(async () => ({})),
+  fetchSimilarListings: vi.fn(async () => []),
 }));
 
 const gym = (id, name) => ({

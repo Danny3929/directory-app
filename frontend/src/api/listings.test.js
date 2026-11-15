@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fetchListings, fetchListing, fetchZips } from './listings.js';
+import { fetchListings, fetchListing, fetchZips, fetchSimilarListings } from './listings.js';
 import listings from '../data/listings.json';
 import zips from '../data/zips.json';
 
@@ -74,5 +74,27 @@ describe('fetchListing', () => {
     gym.name = 'Changed';
     const again = await fetchListing(listings[1].slug, { delayMs: 0 });
     expect(again.name).not.toBe('Changed');
+  });
+});
+
+describe('fetchSimilarListings', () => {
+  it('gives up to 3 other gyms that share a tag with this one', async () => {
+    const gym = listings.find((g) => g.slug === 'flexline-fitness');
+    const result = await fetchSimilarListings('flexline-fitness', { delayMs: 0 });
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.length).toBeLessThanOrEqual(3);
+    for (const other of result) {
+      expect(other.id).not.toBe(gym.id);
+      expect(other.tags.some((t) => gym.tags.includes(t))).toBe(true);
+    }
+  });
+
+  it('gives an empty list for an unknown slug', async () => {
+    expect(await fetchSimilarListings('no-such-gym', { delayMs: 0 })).toEqual([]);
+  });
+
+  it('fails with a friendly message when asked to', async () => {
+    await expect(fetchSimilarListings('flexline-fitness', { delayMs: 0, fail: true }))
+      .rejects.toThrow('Could not load similar gyms.');
   });
 });

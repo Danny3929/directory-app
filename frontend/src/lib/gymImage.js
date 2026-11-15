@@ -23,6 +23,16 @@ export const PHOTOS = {
 
 const FALLBACK = 'classes';
 
+// One photo file from a gym's "photos" list, as { file, src, alt },
+// or null when we have no such photo (so the gallery can skip it).
+export function photoFor(file) {
+  for (const photos of Object.values(PHOTOS)) {
+    const photo = photos.find((p) => p.file === file);
+    if (photo) return { file, src: `${import.meta.env.BASE_URL}images/${file}`, alt: photo.alt };
+  }
+  return null;
+}
+
 // { tag: number of gyms with that tag }
 export function tagCounts(listings) {
   const counts = {};
