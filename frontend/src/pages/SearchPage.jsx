@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchListings, fetchZips } from '../api/listings.js';
-import { filterByText, filterByRadius, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
+import { filterByText, filterByRadius, filterByTags, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
 import { parseSearch, buildSearch, RADII } from '../lib/urlState.js';
 import { gymImage, tagCounts } from '../lib/gymImage.js';
+import { tagLabel } from '../lib/tags.js';
 import GymCard from '../components/GymCard.jsx';
 
 const ZIP_LENGTH = 5;
@@ -57,19 +58,24 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
     ? favourites.filter((id) => !data.listings.some((g) => g.id === id))
     : [];
 
+  // How many gyms have each tag: the chip counts and the "most popular tag" photo rule.
+  const counts = useMemo(() => tagCounts(data.listings), [data.listings]);
+  const allTags = Object.keys(counts).sort();
+  // A tag in a shared link that no gym has is ignored, like ?radius=7.
+  const activeTags = useMemo(() => filters.tags.filter((t) => counts[t]), [filters.tags, counts]);
+  const toggleTag = (tag) =>
+    update({ tags: activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag] });
+
   const results = useMemo(() => {
     const pool = filters.saved ? data.listings.filter((g) => favourites.includes(g.id)) : data.listings;
-    const matched = filterByRadius(filterByText(pool, filters.q), origin, filters.radius);
+    const matched = filterByTags(filterByRadius(filterByText(pool, filters.q), origin, filters.radius), activeTags);
     // Always run the distance sort first: it adds distanceKm to each gym when
     // we know the ZIP, and gives the A to Z tie order the other sorts keep.
     const byDistance = sortByDistance(matched, origin);
     if (filters.sort === 'cheapest') return sortByCheapest(byDistance);
     if (filters.sort === 'featured') return sortByFeatured(byDistance);
     return byDistance;
-  }, [data.listings, filters.q, filters.sort, filters.saved, filters.radius, favourites, origin]);
-
-  // How many gyms have each tag, for the "most popular tag" photo rule.
-  const counts = useMemo(() => tagCounts(data.listings), [data.listings]);
+  }, [data.listings, filters.q, filters.sort, filters.saved, filters.radius, activeTags, favourites, origin]);
 
   return (
     <main className="page">
@@ -144,6 +150,26 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
           />
           <label htmlFor="saved">Saved only</label>
         </div>
+        {allTags.length > 0 && (
+          // Toggle buttons: aria-pressed tells screen readers "pressed" or "not pressed".
+          <fieldset className="field-tags">
+            <legend>Tags (gyms must have all you pick)</legend>
+            <ul className="tag-chips">
+              {allTags.map((tag) => (
+                <li key={tag}>
+                  <button
+                    type="button"
+                    className="chip"
+                    aria-pressed={activeTags.includes(tag)}
+                    onClick={() => toggleTag(tag)}
+                  >
+                    {tagLabel(tag)} ({counts[tag]})
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+        )}
       </form>
 
       {data.status === 'ready' && zipIncomplete && (
@@ -205,6 +231,16 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
               </p>
               <button type="button" onClick={() => update({ radius: null })}>
                 Show any distance
+              </button>
+            </>
+          ) : activeTags.length > 0 ? (
+            <>
+              <p>
+                No gyms have all of: {activeTags.map(tagLabel).join(', ')}
+                {filters.q ? ` and match "${filters.q}"` : ''}.
+              </p>
+              <button type="button" onClick={() => update({ tags: [] })}>
+                Clear tags
               </button>
             </>
           ) : (

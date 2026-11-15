@@ -9,11 +9,12 @@ describe('parseSearch', () => {
       sort: 'cheapest',
       saved: false,
       radius: null,
+      tags: [],
     });
   });
 
   it('uses empty text and the default sort when nothing is there', () => {
-    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null });
+    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null, tags: [] });
   });
 
   it('ignores a sort value we do not know', () => {
@@ -31,7 +32,7 @@ describe('buildSearch', () => {
   });
 
   it('round-trips, including spaces and symbols', () => {
-    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10 };
+    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10, tags: ['boxing', 'strength'] };
     expect(parseSearch(buildSearch(filters))).toEqual(filters);
   });
 });
@@ -63,5 +64,29 @@ describe('radius', () => {
   it('writes radius only when one is picked', () => {
     expect(buildSearch({ q: '', zip: '00619', sort: 'featured', radius: 10 })).toBe('?zip=00619&radius=10');
     expect(buildSearch({ q: '', zip: '', sort: 'featured', radius: null })).toBe('');
+  });
+});
+
+describe('tags (Dan spec 2026-11-15: ?tags=a,b)', () => {
+  it('reads a comma list, trimmed, lower case, without repeats, A to Z', () => {
+    expect(parseSearch('?tags=yoga,boxing').tags).toEqual(['boxing', 'yoga']);
+    expect(parseSearch('?tags=%20Boxing%20,,boxing,YOGA').tags).toEqual(['boxing', 'yoga']);
+    expect(parseSearch('?tags=personal-training').tags).toEqual(['personal-training']);
+  });
+
+  it('gives an empty list for no tags and drops values that are not tag-shaped', () => {
+    expect(parseSearch('').tags).toEqual([]);
+    expect(parseSearch('?tags=').tags).toEqual([]);
+    expect(parseSearch('?tags=<script>,a b,boxing').tags).toEqual(['boxing']);
+  });
+
+  it('keeps at most 10 tags from a hand-edited address', () => {
+    const many = Array.from({ length: 30 }, (_, i) => `t${String(i).padStart(2, '0')}`).join(',');
+    expect(parseSearch(`?tags=${many}`).tags).toHaveLength(10);
+  });
+
+  it('writes tags as one readable comma list, only when some are picked', () => {
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', tags: ['yoga', 'boxing'] })).toBe('?tags=boxing,yoga');
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', tags: [] })).toBe('');
   });
 });

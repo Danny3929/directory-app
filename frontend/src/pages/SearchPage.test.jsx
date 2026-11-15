@@ -251,3 +251,73 @@ describe('SearchPage radius filter (Dan spec 2026-11-15)', () => {
     expect(window.location.search).toBe('?zip=00619');
   });
 });
+
+describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle chips)', () => {
+  const tagged = () => [
+    { ...gym(1, 'Alpha Gym', -1.29, 36.78, 3000), tags: ['boxing', 'strength'] },
+    { ...gym(2, 'Beta Gym', -1.3, 36.8, 2000), tags: ['boxing'] },
+    { ...gym(3, 'Gamma Yoga', -1.28, 36.77, 2500), tags: ['yoga'] },
+  ];
+  const chip = (name) => screen.getByRole('button', { name: new RegExp(`^${name}`, 'i') });
+
+  beforeEach(() => fetchListings.mockResolvedValue(tagged()));
+
+  it('shows one chip per tag with how many gyms have it, none pressed', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(chip('boxing').textContent).toMatch(/Boxing\s*\(2\)/);
+    expect(chip('strength').textContent).toMatch(/\(1\)/);
+    expect(chip('yoga').getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('pressing a chip filters the list and writes ?tags=; pressing again undoes it', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    fireEvent.click(chip('boxing'));
+    expect(chip('boxing').getAttribute('aria-pressed')).toBe('true');
+    expect(names()).toEqual(expect.arrayContaining(['Alpha Gym', 'Beta Gym']));
+    expect(names()).toHaveLength(2);
+    expect(window.location.search).toBe('?tags=boxing');
+    fireEvent.click(chip('boxing'));
+    expect(names()).toHaveLength(3);
+    expect(window.location.search).toBe('');
+  });
+
+  it('needs ALL pressed tags, and keeps them A to Z in the address', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    fireEvent.click(chip('strength'));
+    fireEvent.click(chip('boxing'));
+    expect(names()).toEqual(['Alpha Gym']);
+    expect(window.location.search).toBe('?tags=boxing,strength');
+  });
+
+  it('opens a shared tags link with the same chips pressed', async () => {
+    window.history.replaceState(null, '', '/?tags=boxing,strength');
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(chip('boxing').getAttribute('aria-pressed')).toBe('true');
+    expect(chip('strength').getAttribute('aria-pressed')).toBe('true');
+    expect(names()).toEqual(['Alpha Gym']);
+  });
+
+  it('says when no gym has all the tags and offers to clear them', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    fireEvent.click(chip('boxing'));
+    fireEvent.click(chip('yoga'));
+    expect(names()).toHaveLength(0);
+    expect(screen.getByText(/no gyms have all of: boxing, yoga/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /clear tags/i }));
+    expect(names()).toHaveLength(3);
+    expect(window.location.search).toBe('');
+  });
+
+  it('ignores a tag in the link that no gym has, instead of showing nothing', async () => {
+    window.history.replaceState(null, '', '/?tags=sauna');
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(names()).toHaveLength(3);
+    expect(screen.queryByRole('button', { name: /^sauna/i })).toBeNull();
+  });
+});

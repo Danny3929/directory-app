@@ -65,3 +65,11 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Fix (Dan picked "spread them" on a card): 10 gyms moved, 2 from each old area, to Karen, Ruaka, Rongai, Kitengela and Thika, with new ZIPs 00618, 00511, 00241, 01000 (invented, not checked against the real postal list). From Kilimani: 5 km 35 gyms, 10 km 39, 25 km 41, 50 km 45. `city` now holds the county (Nairobi, Kiambu, Kajiado), so a card reads "8 Limuru Rd, Ruaka, Kiambu". A data test checks that each radius step shows more gyms than the one before; it failed on the old bunched data. Gyms named after their old area (Kilimani Core Club, Westgate Warriors…) were not moved.
 - Explain-it (Dan, card): when a visitor fixes a bad ZIP, the radius box turns on and the 5 km from the address comes back. Correct.
 - Accessibility: the off state is not colour only: the box is `disabled` (skipped by Tab, announced as dimmed) and a text hint is linked with `aria-describedby`.
+
+## Slice notes: tag filters (2026-11-15)
+- Dan's spec (question cards): a gym must have ALL the picked tags, so each extra tag narrows the list; tags are toggle chips with counts, like "Boxing (5)".
+- AI's fill-ins: chips are A to Z with the count over all gyms (it does not change as you filter); the address keeps tags A to Z with plain commas (`?tags=boxing,strength`), lower case, no repeats, at most 10, and drops anything not tag-shaped; a tag in a shared link that no gym has (`?tags=sauna`) is ignored, like `?radius=7`; nothing matching shows "No gyms have all of: Boxing, Yoga." with "Clear tags".
+- What shipped: `filterByTags()` in `search.js`, `tags` in `urlState.js`, `tagLabel()` in new `tags.js` ("personal-training" reads "Personal training", "womens" reads "Women's"), chips on the search page.
+- Tests: 15 new. Broke the code twice on purpose (ANY instead of ALL; not ignoring unknown tags) and the tests caught both.
+- Accessibility: chips are real buttons with `aria-pressed`, so screen readers say "pressed"; pressed shows a tick as well as the fill (not colour alone); each chip is at least 44 px tall for thumbs; the group has a `fieldset` and `legend`.
+- What the AI got wrong: the "Tags" heading first used a different font from the other labels; spotted on the screenshot and fixed.

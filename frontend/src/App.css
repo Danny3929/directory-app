@@ -39,6 +39,54 @@ h3 {
   gap: var(--space-xs);
 }
 
+/* Tag chips: a full-width row under the other controls. */
+.field-tags {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Same look as the other field labels. */
+.field-tags legend {
+  margin-bottom: var(--space-xs);
+  padding: 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* At least 44px tall so it is easy to tap on a phone. */
+.chip {
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Pressed is shown by fill AND a tick, not by colour alone. */
+.chip[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.chip[aria-pressed='true']::before {
+  content: '✓ ';
+}
+
 /* Small helper text under a field, e.g. why the radius box is off. */
 .hint {
   margin: 0;

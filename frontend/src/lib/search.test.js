@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { distanceKm } from './geo.js';
-import { filterByText, filterByRadius, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
+import { filterByText, filterByRadius, filterByTags, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
 
 // Tiny invented gyms, just for these tests.
 const flex = { id: 1, name: 'Flex Gym', description: 'Weights and cardio', priceMin: 3000, isFeatured: false, lat: -1.29, lng: 36.78 };
@@ -116,6 +116,36 @@ describe('filterByRadius', () => {
   it('does not change the list it is given', () => {
     const copy = [...list];
     filterByRadius(list, origin, 5);
+    expect(list).toEqual(copy);
+  });
+});
+
+describe('filterByTags (Dan spec: a gym must have ALL picked tags)', () => {
+  const list = [
+    { id: 1, name: 'A', tags: ['boxing', 'strength'] },
+    { id: 2, name: 'B', tags: ['boxing'] },
+    { id: 3, name: 'C', tags: ['yoga'] },
+    { id: 4, name: 'D' },
+  ];
+  const ids = (gyms) => gyms.map((g) => g.id);
+
+  it('keeps everything when no tag is picked', () => {
+    expect(ids(filterByTags(list, []))).toEqual([1, 2, 3, 4]);
+    expect(ids(filterByTags(list, undefined))).toEqual([1, 2, 3, 4]);
+  });
+
+  it('keeps gyms with the one picked tag', () => {
+    expect(ids(filterByTags(list, ['boxing']))).toEqual([1, 2]);
+  });
+
+  it('needs every picked tag, so each extra tag narrows the list', () => {
+    expect(ids(filterByTags(list, ['boxing', 'strength']))).toEqual([1]);
+    expect(ids(filterByTags(list, ['boxing', 'yoga']))).toEqual([]);
+  });
+
+  it('does not change the list it was given', () => {
+    const copy = structuredClone(list);
+    filterByTags(list, ['boxing']);
     expect(list).toEqual(copy);
   });
 });

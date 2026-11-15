@@ -27,6 +27,13 @@ export function filterByRadius(listings, origin, radiusKm) {
   );
 }
 
+// Keep gyms that have EVERY picked tag (Dan's rule), so each extra tag narrows the list.
+// No tags picked: keep everything.
+export function filterByTags(listings, tags) {
+  if (!tags || tags.length === 0) return [...listings];
+  return listings.filter((gym) => tags.every((tag) => (gym.tags ?? []).includes(tag)));
+}
+
 // Nearest first; equal distances go A to Z by name (Dan's rule).
 // origin is { lat, lng } (from a ZIP); null means "ZIP not found",
 // so we leave the order alone. Gyms with no coordinates go last.
