@@ -1,6 +1,8 @@
+import FavouriteButton from './FavouriteButton.jsx';
+
 // One gym in the results list. It only shows what it is given.
 // distanceKm is there only when the visitor entered a known ZIP.
-export default function GymCard({ gym }) {
+export default function GymCard({ gym, isFavourite = false, onToggleFavourite }) {
   const hasDistance = Number.isFinite(gym.distanceKm);
 
   return (
@@ -8,6 +10,9 @@ export default function GymCard({ gym }) {
       <div className="card-top">
         <h3>{gym.name}</h3>
         {gym.featured && <span className="badge">Featured</span>}
+        {onToggleFavourite && (
+          <FavouriteButton gymName={gym.name} isFavourite={isFavourite} onToggle={onToggleFavourite} />
+        )}
       </div>
       <p className="muted">
         {gym.address}, {gym.area}, {gym.city}

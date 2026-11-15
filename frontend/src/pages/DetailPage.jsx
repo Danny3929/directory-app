@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import FavouriteButton from '../components/FavouriteButton.jsx';
 import { fetchListing } from '../api/listings.js';
 
 // One gym in full. The page asks the fake API for it by id and shows one of:
 // loading, error (with Try again), not found, or the gym.
-export default function DetailPage({ gymId }) {
+export default function DetailPage({ gymId, isFavourite = false, onToggleFavourite }) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ status: 'loading', gym: null, error: '' });
 
@@ -58,6 +59,9 @@ export default function DetailPage({ gymId }) {
           <div className="card-top">
             <h1>{gym.name}</h1>
             {gym.featured && <span className="badge">Featured</span>}
+            {onToggleFavourite && (
+              <FavouriteButton gymName={gym.name} isFavourite={isFavourite} onToggle={onToggleFavourite} />
+            )}
           </div>
           <p className="muted">
             {gym.address}, {gym.area}, {gym.city}

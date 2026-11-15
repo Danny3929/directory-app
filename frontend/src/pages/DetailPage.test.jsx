@@ -70,3 +70,14 @@ describe('DetailPage', () => {
     await screen.findByText('Other Gym');
   });
 });
+
+describe('DetailPage favourite button', () => {
+  it('shows a pressed heart and calls onToggleFavourite', async () => {
+    const onToggle = vi.fn();
+    render(<DetailPage gymId={3} isFavourite={true} onToggleFavourite={onToggle} />);
+    const btn = await screen.findByRole('button', { name: /save baobab barbell/i });
+    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(btn);
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+});

@@ -181,3 +181,24 @@ button {
 .detail h1 {
   margin-bottom: var(--space-sm);
 }
+
+.fav-button {
+  margin-left: auto;
+  min-width: var(--target-size);
+  min-height: var(--target-size);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-lg);
+  cursor: pointer;
+}
+.fav-button[aria-pressed='true'] {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.fav-button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
