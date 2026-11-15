@@ -6,7 +6,7 @@ import GymCard from '../components/GymCard.jsx';
 
 const ZIP_LENGTH = 5;
 
-export default function SearchPage() {
+export default function SearchPage({ favourites = [], onToggleFavourite }) {
   // The search choices live in the address bar too, so links can be shared.
   const [filters, setFilters] = useState(() => parseSearch(window.location.search));
   // Demo switch: opening the page with ?fail=1 makes the first load fail,
@@ -152,7 +152,12 @@ export default function SearchPage() {
           </p>
           <ul className="gym-grid">
             {results.map((gym) => (
-              <GymCard key={gym.id} gym={gym} />
+              <GymCard
+                key={gym.id}
+                gym={gym}
+                isFavourite={favourites.includes(gym.id)}
+                onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(gym.id))}
+              />
             ))}
           </ul>
         </>

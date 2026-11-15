@@ -1,3 +1,4 @@
+import { gymPath } from '../lib/route.js';
 import FavouriteButton from './FavouriteButton.jsx';
 
 // One gym in the results list. It only shows what it is given.
@@ -8,7 +9,9 @@ export default function GymCard({ gym, isFavourite = false, onToggleFavourite })
   return (
     <li className="card">
       <div className="card-top">
-        <h3>{gym.name}</h3>
+        <h3>
+          <a href={gymPath(gym.id)}>{gym.name}</a>
+        </h3>
         {gym.featured && <span className="badge">Featured</span>}
         {onToggleFavourite && (
           <FavouriteButton gymName={gym.name} isFavourite={isFavourite} onToggle={onToggleFavourite} />
