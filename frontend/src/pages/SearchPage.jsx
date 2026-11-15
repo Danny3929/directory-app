@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchListings, fetchZips } from '../api/listings.js';
-import { filterByText, filterByRadius, filterByTags, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
+import { filterByText, filterByRadius, filterByTags, filterByPrice, sortByDistance, sortByCheapest, sortByFeatured } from '../lib/search.js';
 import { parseSearch, buildSearch, RADII } from '../lib/urlState.js';
 import { gymImage, tagCounts } from '../lib/gymImage.js';
 import { tagLabel } from '../lib/tags.js';
+import { isOverBudget, priceRangeError, priceText } from '../lib/price.js';
 import GymCard from '../components/GymCard.jsx';
 
 const ZIP_LENGTH = 5;
+const PRICE_DIGITS = 6;
+
+// What the visitor typed in a price box -> a number, or null for empty.
+// Anything that is not a digit (letters, commas, spaces) is dropped, so '4,000' is 4000.
+const toPrice = (text) => {
+  const digits = text.replace(/\D/g, '').slice(0, PRICE_DIGITS);
+  return digits === '' ? null : Number(digits);
+};
 
 export default function SearchPage({ favourites = [], onToggleFavourite }) {
   // The search choices live in the address bar too, so links can be shared.
@@ -66,16 +75,25 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   const toggleTag = (tag) =>
     update({ tags: activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag] });
 
+  // Min more than Max: say so and leave the price filter off (Dan's spec).
+  const priceError = priceRangeError(filters.min, filters.max);
+  const priceOn = !priceError && (filters.min != null || filters.max != null);
+  const budget = priceError ? null : filters.max;
+
   const results = useMemo(() => {
     const pool = filters.saved ? data.listings.filter((g) => favourites.includes(g.id)) : data.listings;
-    const matched = filterByTags(filterByRadius(filterByText(pool, filters.q), origin, filters.radius), activeTags);
+    const matched = filterByPrice(
+      filterByTags(filterByRadius(filterByText(pool, filters.q), origin, filters.radius), activeTags),
+      filters.min,
+      filters.max,
+    );
     // Always run the distance sort first: it adds distanceKm to each gym when
     // we know the ZIP, and gives the A to Z tie order the other sorts keep.
     const byDistance = sortByDistance(matched, origin);
     if (filters.sort === 'cheapest') return sortByCheapest(byDistance);
     if (filters.sort === 'featured') return sortByFeatured(byDistance);
     return byDistance;
-  }, [data.listings, filters.q, filters.sort, filters.saved, filters.radius, activeTags, favourites, origin]);
+  }, [data.listings, filters.q, filters.sort, filters.saved, filters.radius, filters.min, filters.max, activeTags, favourites, origin]);
 
   return (
     <main className="page">
@@ -141,6 +159,44 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
             <option value="distance">Nearest first</option>
           </select>
         </div>
+        {/* Two plain number boxes. type="text" + inputMode="numeric" gives a number
+            keypad on phones without the spinner arrows and odd values of type="number". */}
+        <fieldset className="field-price">
+          <legend>Price a month</legend>
+          <div className="price-boxes">
+            <div className="field">
+              <label htmlFor="min">Min Ksh</label>
+              <input
+                id="min"
+                type="text"
+                inputMode="numeric"
+                value={filters.min ?? ''}
+                aria-invalid={priceError ? true : undefined}
+                aria-describedby={priceError ? 'price-error' : undefined}
+                onChange={(e) => update({ min: toPrice(e.target.value) })}
+                placeholder="Any"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="max">Max Ksh</label>
+              <input
+                id="max"
+                type="text"
+                inputMode="numeric"
+                value={filters.max ?? ''}
+                aria-invalid={priceError ? true : undefined}
+                aria-describedby={priceError ? 'price-error' : undefined}
+                onChange={(e) => update({ max: toPrice(e.target.value) })}
+                placeholder="Any"
+              />
+            </div>
+          </div>
+          {priceError && (
+            <p id="price-error" className="hint hint-error" role="alert">
+              {priceError}
+            </p>
+          )}
+        </fieldset>
         <div className="field field-check">
           <input
             id="saved"
@@ -243,6 +299,16 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
                 Clear tags
               </button>
             </>
+          ) : priceOn ? (
+            <>
+              <p>
+                No gyms have a plan {priceText(filters.min, filters.max)}
+                {filters.q ? ` and match "${filters.q}"` : ''}.
+              </p>
+              <button type="button" onClick={() => update({ min: null, max: null })}>
+                Clear price
+              </button>
+            </>
           ) : (
             <>
               <p>No gyms match "{filters.q}".</p>
@@ -265,6 +331,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
                 key={gym.id}
                 gym={gym}
                 image={gymImage(gym, { query: filters.q, counts })}
+                overBudget={isOverBudget(gym, budget) ? budget : null}
                 isFavourite={favourites.includes(gym.id)}
                 onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(gym.id))}
               />

@@ -22,6 +22,10 @@ function parseTags(text) {
   return [...new Set(tags)].sort().slice(0, MAX_TAGS);
 }
 
+// Whole Ksh amounts only, up to 6 digits: '4000' -> 4000; '4000.5', '-5', '1e3' -> null.
+const PRICE_SHAPE = /^\d{1,6}$/;
+const parsePrice = (text) => (PRICE_SHAPE.test(text ?? '') ? Number(text) : null);
+
 export function parseSearch(search) {
   const params = new URLSearchParams(search);
   const sort = params.get('sort');
@@ -34,12 +38,14 @@ export function parseSearch(search) {
     saved: params.get('saved') === '1',
     radius,
     tags: parseTags(params.get('tags')),
+    min: parsePrice(params.get('min')),
+    max: parsePrice(params.get('max')),
   };
 }
 
 // Only choices that differ from the default go in the address, so the
 // plain page keeps a clean URL. Returns '' or a string starting with '?'.
-export function buildSearch({ q, zip, sort, saved, radius, tags }) {
+export function buildSearch({ q, zip, sort, saved, radius, tags, min, max }) {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (zip) params.set('zip', zip);
@@ -47,6 +53,9 @@ export function buildSearch({ q, zip, sort, saved, radius, tags }) {
   if (saved) params.set('saved', '1');
   if (RADII.includes(radius)) params.set('radius', String(radius));
   if (tags?.length) params.set('tags', [...tags].sort().join(','));
+  // != null keeps 0, which is a real amount.
+  if (min != null) params.set('min', String(min));
+  if (max != null) params.set('max', String(max));
   // URLSearchParams writes a comma as %2C; a plain comma is allowed and easier to read.
   const text = params.toString().replace(/%2C/g, ',');
   return text ? `?${text}` : '';

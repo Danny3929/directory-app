@@ -3,6 +3,7 @@
 // Array.prototype.sort is stable, so in the price and featured sorts, ties keep their data order.
 
 import { distanceKm } from './geo.js';
+import { topPrice } from './price.js';
 
 // Keep gyms whose name or description contains the text (any upper/lower case).
 // An empty or spaces-only query keeps everything.
@@ -32,6 +33,16 @@ export function filterByRadius(listings, origin, radiusKm) {
 export function filterByTags(listings, tags) {
   if (!tags || tags.length === 0) return [...listings];
   return listings.filter((gym) => tags.every((tag) => (gym.tags ?? []).includes(tag)));
+}
+
+// Keep gyms with at least one plan between min and max (Dan's rule: the
+// ranges overlap, and a plan exactly on a limit counts). null = no limit.
+// Min more than Max makes no sense, so the filter is off (the page says why).
+export function filterByPrice(listings, min, max) {
+  if (min != null && max != null && min > max) return [...listings];
+  return listings.filter(
+    (gym) => (max == null || gym.priceMin <= max) && (min == null || topPrice(gym) >= min),
+  );
 }
 
 // Nearest first; equal distances go A to Z by name (Dan's rule).

@@ -1,11 +1,12 @@
 import { gymPath } from '../lib/route.js';
-import { formatPrice } from '../lib/price.js';
+import { formatPrice, formatKsh } from '../lib/price.js';
 import FavouriteButton from './FavouriteButton.jsx';
 
 // One gym in the results list. It only shows what it is given.
 // distanceKm is there only when the visitor entered a known ZIP.
 // image is { src, alt } from gymImage(); the card works without it.
-export default function GymCard({ gym, image, isFavourite = false, onToggleFavourite }) {
+// overBudget is the visitor's Max when some of this gym's plans cost more (Dan's 'show, but mark it').
+export default function GymCard({ gym, image, overBudget = null, isFavourite = false, onToggleFavourite }) {
   const hasDistance = Number.isFinite(gym.distanceKm);
 
   return (
@@ -28,6 +29,8 @@ export default function GymCard({ gym, image, isFavourite = false, onToggleFavou
       </p>
       <p className="card-facts">
         <span>{formatPrice(gym)} a month</span>
+        {/* Words, not only a colour, so everyone can tell. */}
+        {overBudget != null && <span className="price-note">Some plans over Ksh {formatKsh(overBudget)}</span>}
         {hasDistance && <span>{gym.distanceKm.toFixed(2)} km away</span>}
       </p>
       <p>{gym.description}</p>

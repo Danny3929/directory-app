@@ -321,3 +321,76 @@ describe('SearchPage tag filters (Dan spec 2026-11-15: ALL picked tags, toggle c
     expect(screen.queryByRole('button', { name: /^sauna/i })).toBeNull();
   });
 });
+
+describe('SearchPage price range (Dan spec 2026-11-15: Min and Max boxes, overlap, mark over-budget)', () => {
+  const priced = () => [
+    { ...gym(1, 'Alpha Gym', -1.29, 36.78, 0), priceMin: 1500, priceMax: 2500 },
+    { ...gym(2, 'Beta Gym', -1.3, 36.8, 0), priceMin: 3000, priceMax: 5000 },
+    { ...gym(3, 'Gamma Gym', -1.28, 36.77, 0), priceMin: 8000, priceMax: 11000 },
+  ];
+  beforeEach(() => fetchListings.mockResolvedValue(priced()));
+
+  it('has labelled Min and Max boxes that start empty', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(screen.getByLabelText(/min ksh/i).value).toBe('');
+    expect(screen.getByLabelText(/max ksh/i).value).toBe('');
+  });
+
+  it('a Max keeps gyms whose cheapest plan fits, marks them, and writes ?max=', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    type(/max ksh/i, '4000');
+    expect(names()).toEqual(expect.arrayContaining(['Alpha Gym', 'Beta Gym']));
+    expect(names()).toHaveLength(2);
+    expect(window.location.search).toBe('?max=4000');
+    // Beta (3,000 – 5,000) is shown but marked; Alpha (up to 2,500) is not.
+    expect(screen.getAllByText(/some plans over ksh 4,000/i)).toHaveLength(1);
+  });
+
+  it('a Min keeps gyms whose dearest plan reaches it', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    type(/min ksh/i, '6000');
+    expect(names()).toEqual(['Gamma Gym']);
+    expect(window.location.search).toBe('?min=6000');
+  });
+
+  it('drops letters and commas as you type, so "4,000" means 4000', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    type(/max ksh/i, '4,0a00');
+    expect(screen.getByLabelText(/max ksh/i).value).toBe('4000');
+    expect(window.location.search).toBe('?max=4000');
+  });
+
+  it('opens a shared price link with the same boxes filled in', async () => {
+    window.history.replaceState(null, '', '/?min=2000&max=6000');
+    render(<SearchPage />);
+    await screen.findByText('Beta Gym');
+    expect(screen.getByLabelText(/min ksh/i).value).toBe('2000');
+    expect(screen.getByLabelText(/max ksh/i).value).toBe('6000');
+    expect(names()).toEqual(['Alpha Gym', 'Beta Gym']);
+  });
+
+  it('says when Min is more than Max and leaves the price filter off', async () => {
+    window.history.replaceState(null, '', '/?min=6000&max=2000');
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(screen.getByText(/min is more than max/i)).toBeTruthy();
+    expect(names()).toHaveLength(3);
+    expect(screen.queryByText(/some plans over/i)).toBeNull();
+  });
+
+  it('says when no gym has a plan in the range and offers to clear it', async () => {
+    render(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    type(/min ksh/i, '5500');
+    type(/max ksh/i, '7500');
+    expect(names()).toHaveLength(0);
+    expect(screen.getByText(/no gyms have a plan between ksh 5,500 and 7,500/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /clear price/i }));
+    expect(names()).toHaveLength(3);
+    expect(window.location.search).toBe('');
+  });
+});

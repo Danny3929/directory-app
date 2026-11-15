@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { distanceKm } from './geo.js';
-import { filterByText, filterByRadius, filterByTags, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
+import { filterByText, filterByRadius, filterByTags, filterByPrice, sortByDistance, sortByCheapest, sortByFeatured } from './search.js';
 
 // Tiny invented gyms, just for these tests.
 const flex = { id: 1, name: 'Flex Gym', description: 'Weights and cardio', priceMin: 3000, isFeatured: false, lat: -1.29, lng: 36.78 };
@@ -147,5 +147,48 @@ describe('filterByTags (Dan spec: a gym must have ALL picked tags)', () => {
     const copy = structuredClone(list);
     filterByTags(list, ['boxing']);
     expect(list).toEqual(copy);
+  });
+});
+
+describe('filterByPrice (Dan spec: show a gym if any of its plans fits the range)', () => {
+  // Plans from priceMin to priceMax, like the real data.
+  const cheap = { id: 1, name: 'Cheap', priceMin: 1500, priceMax: 2500 };
+  const mid = { id: 2, name: 'Mid', priceMin: 3000, priceMax: 5000 };
+  const dear = { id: 3, name: 'Dear', priceMin: 8000, priceMax: 11000 };
+  const gyms = [cheap, mid, dear];
+  const ids = (list) => list.map((g) => g.id);
+
+  it('keeps everything when neither box is set', () => {
+    expect(ids(filterByPrice(gyms, null, null))).toEqual([1, 2, 3]);
+  });
+
+  it("keeps a gym whose cheapest plan fits under Max (Dan's 3,000-5,000 vs 4,000 card)", () => {
+    expect(ids(filterByPrice(gyms, null, 4000))).toEqual([1, 2]);
+  });
+
+  it('keeps a gym whose dearest plan reaches Min', () => {
+    expect(ids(filterByPrice(gyms, 4000, null))).toEqual([2, 3]);
+  });
+
+  it('counts a plan exactly on either limit as inside', () => {
+    expect(ids(filterByPrice(gyms, 5000, 8000))).toEqual([2, 3]);
+  });
+
+  it('drops gyms with no plan in the range', () => {
+    expect(ids(filterByPrice(gyms, 5500, 7500))).toEqual([]);
+  });
+
+  it('ignores the filter when Min is more than Max (the page explains it)', () => {
+    expect(ids(filterByPrice(gyms, 6000, 2000))).toEqual([1, 2, 3]);
+  });
+
+  it('uses the starting price as the top too when a gym has no priceMax', () => {
+    expect(ids(filterByPrice([{ id: 9, priceMin: 3000 }], 3500, null))).toEqual([]);
+  });
+
+  it('does not change the list it is given', () => {
+    const copy = structuredClone(gyms);
+    filterByPrice(gyms, 2000, 4000);
+    expect(gyms).toEqual(copy);
   });
 });

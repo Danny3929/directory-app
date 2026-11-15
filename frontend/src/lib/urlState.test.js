@@ -10,11 +10,13 @@ describe('parseSearch', () => {
       saved: false,
       radius: null,
       tags: [],
+      min: null,
+      max: null,
     });
   });
 
   it('uses empty text and the default sort when nothing is there', () => {
-    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null, tags: [] });
+    expect(parseSearch('')).toEqual({ q: '', zip: '', sort: 'featured', saved: false, radius: null, tags: [], min: null, max: null });
   });
 
   it('ignores a sort value we do not know', () => {
@@ -32,7 +34,7 @@ describe('buildSearch', () => {
   });
 
   it('round-trips, including spaces and symbols', () => {
-    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10, tags: ['boxing', 'strength'] };
+    const filters = { q: 'yoga & pilates', zip: '00619', sort: 'distance', saved: true, radius: 10, tags: ['boxing', 'strength'], min: 2000, max: 5000 };
     expect(parseSearch(buildSearch(filters))).toEqual(filters);
   });
 });
@@ -88,5 +90,24 @@ describe('tags (Dan spec 2026-11-15: ?tags=a,b)', () => {
   it('writes tags as one readable comma list, only when some are picked', () => {
     expect(buildSearch({ q: '', zip: '', sort: 'featured', tags: ['yoga', 'boxing'] })).toBe('?tags=boxing,yoga');
     expect(buildSearch({ q: '', zip: '', sort: 'featured', tags: [] })).toBe('');
+  });
+});
+
+describe('price range (Dan spec 2026-11-15: ?min=&max= in Ksh)', () => {
+  it('reads whole Ksh amounts as numbers', () => {
+    expect(parseSearch('?min=2000&max=5000')).toMatchObject({ min: 2000, max: 5000 });
+    expect(parseSearch('?max=4000')).toMatchObject({ min: null, max: 4000 });
+  });
+
+  it('ignores values that are not whole numbers of up to 6 digits', () => {
+    for (const bad of ['?min=', '?min=abc', '?min=-500', '?min=4000.5', '?min=1e3', '?min=1234567', '?min=4%2C000']) {
+      expect(parseSearch(bad).min).toBeNull();
+    }
+  });
+
+  it('writes min and max only when set, and keeps 0', () => {
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', min: 2000, max: 5000 })).toBe('?min=2000&max=5000');
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', min: 0, max: null })).toBe('?min=0');
+    expect(buildSearch({ q: '', zip: '', sort: 'featured', min: null, max: null })).toBe('');
   });
 });

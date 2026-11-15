@@ -87,11 +87,54 @@ h3 {
   content: '✓ ';
 }
 
+/* Price: one group with a Min and a Max box side by side, even on phones. */
+.field-price {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .field-price {
+    grid-column: span 2;
+  }
+}
+
+.field-price legend {
+  margin-bottom: var(--space-xs);
+  padding: 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.price-boxes {
+  display: grid;
+  /* minmax(0, 1fr): let the columns shrink below an input's natural ~20-character width. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+/* The Min/Max labels sit under the group heading, so they are lighter. */
+.price-boxes label {
+  font-weight: 400;
+}
+
+.price-boxes input {
+  width: 100%;
+  min-width: 0;
+}
+
 /* Small helper text under a field, e.g. why the radius box is off. */
 .hint {
   margin: 0;
   font-size: 0.875rem;
   color: var(--color-muted);
+}
+
+/* An error hint: the words say what is wrong; red only adds to it. */
+.hint-error {
+  color: var(--color-danger);
 }
 
 /* A switched-off control must look off, not only ignore clicks. */
@@ -272,6 +315,12 @@ button {
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-sm);
+}
+
+/* Over-budget note on a card: words carry the meaning; colour only helps. */
+.price-note {
+  color: var(--color-warn);
+  font-weight: 400;
 }
 
 .card-facts {
