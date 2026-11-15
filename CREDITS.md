@@ -18,5 +18,5 @@ hero 1600x640).
 | `pilates.webp` | Gyms tagged `pilates` | Roxana Popovici | [woman does a pilates exercise on a reformer](https://unsplash.com/photos/woman-does-a-pilates-exercise-on-a-reformer-cZ0WYsBFHhs) |
 | `outdoor.webp` | Gyms tagged `outdoor` | Lawrence Crayton | [man in gray tank top holding gray metal bar](https://unsplash.com/photos/man-in-gray-tank-top-holding-gray-metal-bar-ICwuKvw9QJk) |
 | `classes.webp` | Gyms tagged `classes`, and the fallback | Kaspars Eglitis | [group of women running on brown wooden floor](https://unsplash.com/photos/group-of-women-running-on-brown-wooden-floor-Vdx-2lsuhm0) |
-| `spin-1.webp` | Gyms tagged `spin` (odd ids) | Sam Moghadam | [group of people on exercise bikes](https://unsplash.com/photos/group-of-people-sitting-on-black-bench-W8CyjblrF8U) |
-| `spin-2.webp` | Gyms tagged `spin` (even ids) | Amari Shutters | [row of red stationary exercise bikes in gym](https://unsplash.com/photos/row-of-red-stationary-exercise-bikes-in-gym-9FBx4LwGpFc) |
+| `spin-1.webp` | Gyms tagged `spin` (even ids) | Sam Moghadam | [group of people on exercise bikes](https://unsplash.com/photos/group-of-people-sitting-on-black-bench-W8CyjblrF8U) |
+| `spin-2.webp` | Gyms tagged `spin` (odd ids) | Amari Shutters | [row of red stationary exercise bikes in gym](https://unsplash.com/photos/row-of-red-stationary-exercise-bikes-in-gym-9FBx4LwGpFc) |
