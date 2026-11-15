@@ -32,3 +32,13 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - `favourites.test.js` first failed with "localStorage is not defined": tests that touch the browser need `// @vitest-environment jsdom` on line 1.
 - My `fetchListing` tests and code were written together, so I never saw the tests fail first. I proved them with two break checks afterwards.
 - Decisions (Dan): favourites store ids only; a saved gym that no longer exists shows a "no longer available" card with Remove; Back keeps the same search (search choices live in `?q=`, the page lives in `#/`).
+
+## Slice notes: detail page, heart button, Saved filter, final checks (2026-11-15)
+- Break check gap: I broke "detail heart ignores the saved list" and no test failed. Rule: after a break check, if nothing fails, add the missing test, then break again. Added `the detail page heart starts pressed for a saved gym`.
+- A saved test (`combines with the text search`) passed before the code existed, so it proves little. The other 4 saved tests failed first.
+- Heart button: real `<button type="button">`, label stays "Save <gym>", `aria-pressed` carries on/off. The heart shape also changes (♡ to ♥), so state is not shown by colour alone. Target is 44px with a visible focus ring.
+- `?saved=1` lives in the address like `?q=` and `?zip=`, so Back from a detail page returns to the Saved view.
+- Keyboard checked in a real Chrome (driven through its debugging port): Tab order is search, ZIP, sort, Saved only, then each card's name link and heart. Space and Enter both toggle the heart, and `localStorage` follows (`[8]` then `[]`).
+- Layout checked at a true 390px width: no sideways scroll on the saved view or the detail page.
+- Not tested: a screen reader (only the roles and `aria-pressed` are tested), a real phone, and the gym-gone card on screen (only in tests).
+- Tooling slip: headless Chrome `--window-size=390` crops the picture because Chrome has a minimum window width. Use device emulation instead.
