@@ -78,7 +78,7 @@ The search and filter rules are plain functions in `src/lib/`, tested on their o
 
 ## Tests
 
-`npm test` output (19 files, 237 tests):
+`npm test` output (19 files, 241 tests):
 
 ```
  RUN  v5.1.0 C:/Users/hp/crepton/directory-app/frontend
@@ -104,7 +104,7 @@ The search and filter rules are plain functions in `src/lib/`, tested on their o
  ✓ src/pages/SearchPage.test.jsx (41 tests)
 
  Test Files  19 passed (19)
-      Tests  237 passed (237)
+      Tests  241 passed (241)
 ```
 
 (Lines shortened: the timings are removed. Made with `npm test -- --reporter=tree` on 15 Nov 2026.)
