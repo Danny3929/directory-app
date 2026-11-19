@@ -4,13 +4,17 @@ from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework.decorators import action, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
 from . import services
-from .models import Listing, Tag
-from .serializers import ListingSerializer, SearchParamsSerializer, TagCountSerializer
+from .models import Enquiry, Listing, Tag
+from .serializers import (
+    EnquirySerializer, ListingSerializer, SearchParamsSerializer, TagCountSerializer,
+)
 
 
 class ListingPagination(PageNumberPagination):
@@ -23,6 +27,7 @@ class ListingViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = ListingPagination
     lookup_field = "slug"
     filter_backends = []  # we filter by hand below
+    throttle_scope = None  # only the enquiries action sets one
 
     def get_queryset(self):
         # prefetch: tags and photos come in 2 extra queries, not 2 per gym.
@@ -67,6 +72,23 @@ class ListingViewSet(viewsets.ReadOnlyModelViewSet):
 
         page = self.paginate_queryset(qs)
         return self.get_paginated_response(self.get_serializer(page, many=True).data)
+
+    @extend_schema(request=EnquirySerializer, responses={201: OpenApiTypes.OBJECT})
+    @action(
+        detail=True, methods=["post"], url_path="enquiries",
+        throttle_classes=[ScopedRateThrottle], throttle_scope="enquiry",
+    )
+    def enquiries(self, request, slug=None):
+        """Send a message to a gym. Limited to 5 an hour per visitor."""
+        gym = self.get_object()  # published gyms only, so a hidden one is a 404
+        serializer = EnquirySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        enquiry = serializer.save(listing=gym)
+        # Reply without echoing the visitor's personal details back.
+        return Response(
+            {"id": enquiry.pk, "message": f"Thanks, your message was sent to {gym.name}."},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

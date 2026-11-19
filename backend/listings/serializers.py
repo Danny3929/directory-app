@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Listing, ListingImage, Tag
+from .models import Enquiry, Listing, ListingImage, Tag
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -72,3 +72,12 @@ class TagCountSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ["name", "slug", "count"]
         read_only_fields = fields
+
+
+class EnquirySerializer(serializers.ModelSerializer):
+    """What a visitor may send. Only these three fields are read from the client;
+    listing, is_read and created_at are set by the server."""
+
+    class Meta:
+        model = Enquiry
+        fields = ["name", "email", "message"]

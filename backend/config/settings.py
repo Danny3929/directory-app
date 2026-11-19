@@ -138,6 +138,10 @@ REST_FRAMEWORK = {
     # Visitors can read listings and send an enquiry without logging in.
     # Changing data is only done in the Django admin, which needs a staff login.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
+    "EXCEPTION_HANDLER": "listings.errors.api_exception_handler",
+    # Only the enquiry endpoint uses this scope. Counted per visitor IP in the cache.
+    # Behind a proxy (Task 5) set NUM_PROXIES, or every visitor looks like the proxy.
+    "DEFAULT_THROTTLE_RATES": {"enquiry": "5/hour"},
 }
 
 # When DEBUG is off (a real server), cookies are only sent over HTTPS.
