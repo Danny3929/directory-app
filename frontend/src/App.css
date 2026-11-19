@@ -1,5 +1,10 @@
+/* --page-width: one value for the page and the top menu, so they line up. */
+:root {
+  --page-width: 1200px;
+}
+
 .page {
-  max-width: 960px;
+  max-width: var(--page-width);
   margin: 0 auto;
   padding: var(--space-lg) var(--space-md);
 }
@@ -33,10 +38,26 @@ h3 {
   }
 }
 
+/* Laptops: Price joins the first row (Search, ZIP, Within, Sort by, Price),
+   so the gym cards start higher up the screen. */
+@media (min-width: 1100px) {
+  .controls {
+    grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
+  }
+}
+
+/* min-width: 0 lets a field shrink with its grid column; without it a select
+   keeps its text width and pokes out past the screen edge (seen at 768px). */
 .field {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  min-width: 0;
+}
+
+.field select {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Tag chips: a full-width row under the other controls. */
@@ -98,6 +119,12 @@ h3 {
 @media (min-width: 720px) {
   .field-price {
     grid-column: span 2;
+  }
+}
+
+@media (min-width: 1100px) {
+  .field-price {
+    grid-column: auto;
   }
 }
 
@@ -223,6 +250,18 @@ button {
 @media (min-width: 720px) {
   .gym-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Laptops: three cards per row, with shorter photos (2:1 instead of 16:9),
+   so a whole row of cards fits on the screen. */
+@media (min-width: 1100px) {
+  .gym-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gym-grid .card-photo {
+    aspect-ratio: 2 / 1;
   }
 }
 
@@ -369,7 +408,10 @@ button {
   font-weight: 600;
 }
 
+/* The gym itself stays 960px wide (the photos are 960px), even though the
+   page around it is now 1200px, so its photo is not blown up and too tall. */
 .detail {
+  max-width: 960px;
   padding: var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -406,7 +448,7 @@ button {
 .site-nav {
   display: flex;
   gap: var(--space-sm);
-  max-width: 960px;
+  max-width: var(--page-width);
   margin: 0 auto;
   padding: var(--space-sm) var(--space-md) 0;
 }

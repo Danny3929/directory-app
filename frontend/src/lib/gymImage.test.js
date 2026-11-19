@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { gymImage, tagCounts, PHOTOS } from './gymImage.js';
+import { existsSync } from 'node:fs';
+import { gymImage, tagCounts, photoFor, PHOTOS } from './gymImage.js';
 import listings from '../data/listings.json';
 
-// Same numbers as the real data: classes 15, weights and strength 10, the rest 5.
-const counts = { classes: 15, weights: 10, strength: 10, boxing: 5, yoga: 5, pilates: 5, spin: 5, outdoor: 5 };
-
-const gym = (id, tags) => ({ id, name: `Gym ${id}`, tags });
+const gym = (id, tags, photoTag, photos) => ({ id, name: `Gym ${id}`, tags, photoTag, photos });
 const file = (result) => result.src.split('/').pop();
+const CARD_TAGS = ['boxing', 'cardio', 'classes', 'outdoor', 'personal-training', 'spin', 'weights', 'womens', 'yoga'];
 
 describe('tagCounts', () => {
   it('counts how many gyms have each tag', () => {
@@ -18,65 +17,93 @@ describe('tagCounts', () => {
   });
 });
 
-describe('gymImage: the tag the visitor searched for wins', () => {
-  it('shows boxing when the search mentions boxing, even though strength is more popular', () => {
-    expect(file(gymImage(gym(1, ['boxing', 'strength']), { query: 'boxing', counts }))).toBe('boxing.webp');
+describe('gymImage: a gym shows its own photo (the first in its photos list)', () => {
+  it('shows the gym\'s own outdoor photo', () => {
+    expect(file(gymImage(gym(1, ['outdoor', 'weights'], 'outdoor', ['outdoor-3.webp', 'weights.webp'])))).toBe('outdoor-3.webp');
   });
 
-  it('ignores upper/lower case and other words in the search', () => {
-    expect(file(gymImage(gym(1, ['boxing', 'strength']), { query: 'BOXING near Westlands', counts }))).toBe('boxing.webp');
+  it('is not changed by what the visitor searched for', () => {
+    const g = gym(1, ['outdoor', 'weights'], 'outdoor', ['outdoor-3.webp']);
+    expect(file(gymImage(g, { query: 'weights' }))).toBe('outdoor-3.webp');
   });
 
-  it('falls back to popularity when the searched tag is not on this gym', () => {
-    expect(file(gymImage(gym(1, ['boxing', 'strength']), { query: 'yoga', counts }))).toBe('strength.webp');
-  });
-});
-
-describe('gymImage: otherwise the most popular tag wins', () => {
-  it('picks the tag on the most gyms', () => {
-    expect(file(gymImage(gym(1, ['outdoor', 'weights']), { counts }))).toBe('weights.webp');
+  it('gives the same photo every time for the same gym', () => {
+    const g = gym(4, ['spin'], 'spin', ['spin-4.webp']);
+    expect(file(gymImage(g))).toBe(file(gymImage({ ...g })));
   });
 
-  it('breaks a tie A to Z', () => {
-    expect(file(gymImage(gym(1, ['yoga', 'pilates']), { counts }))).toBe('pilates.webp');
-    expect(file(gymImage(gym(1, ['weights', 'strength']), { counts }))).toBe('strength.webp');
-  });
-
-  it('skips tags that have no photo (beginner, cardio...)', () => {
-    expect(file(gymImage(gym(1, ['beginner', 'boxing']), { counts: { beginner: 99, boxing: 5 } }))).toBe('boxing.webp');
+  it('returns the tag and some alt text', () => {
+    const result = gymImage(gym(1, ['cardio'], 'cardio', ['cardio-2.webp']));
+    expect(result.tag).toBe('cardio');
+    expect(result.alt.length).toBeGreaterThan(10);
   });
 });
 
-describe('gymImage: fallback and spin', () => {
-  it('gives the classes photo when no tag has a photo', () => {
-    const result = gymImage(gym(1, ['beginner', 'cardio']), { counts });
+describe('gymImage: fallback', () => {
+  it('uses the first photo of the tag when the gym\'s own photo is from another tag', () => {
+    expect(file(gymImage(gym(1, ['boxing'], 'boxing', ['yoga-2.webp'])))).toBe(PHOTOS.boxing[0].file);
+  });
+
+  it('uses the first photo of the tag when the gym has no photos list', () => {
+    expect(file(gymImage(gym(1, ['boxing'], 'boxing')))).toBe(PHOTOS.boxing[0].file);
+  });
+
+  it('gives the classes photo when the photoTag has no photos', () => {
+    const result = gymImage(gym(1, ['beginner'], 'beginner'));
     expect(file(result)).toBe('classes.webp');
     expect(result.tag).toBe('classes');
   });
 
-  it('gives the classes photo for a gym with no tags at all', () => {
+  it('gives the classes photo for a gym with nothing at all', () => {
     expect(file(gymImage({ id: 7 }))).toBe('classes.webp');
-  });
-
-  it('alternates the two spin photos by gym id', () => {
-    expect(file(gymImage(gym(2, ['spin']), { counts }))).toBe('spin-1.webp');
-    expect(file(gymImage(gym(3, ['spin']), { counts }))).toBe('spin-2.webp');
   });
 });
 
-describe('every photo', () => {
-  it('has alt text and a file in public/images', async () => {
-    const { existsSync } = await import('node:fs');
-    for (const [tag, photos] of Object.entries(PHOTOS)) {
-      for (const p of photos) {
-        expect(p.alt.length, tag).toBeGreaterThan(10);
-        expect(existsSync(new URL(`../../public/images/${p.file}`, import.meta.url)), p.file).toBe(true);
-      }
+describe('PHOTOS', () => {
+  it('has 5 photos for every tag a card can show', () => {
+    for (const tag of CARD_TAGS) expect(PHOTOS[tag]?.length, tag).toBe(5);
+  });
+
+  it('never lists the same file twice', () => {
+    const files = Object.values(PHOTOS).flat().map((p) => p.file);
+    expect(new Set(files).size).toBe(files.length);
+  });
+
+  it('has alt text and a file in public/images for every photo', () => {
+    for (const photo of Object.values(PHOTOS).flat()) {
+      expect(photo.alt.length, photo.file).toBeGreaterThan(10);
+      expect(existsSync(new URL(`../../public/images/${photo.file}`, import.meta.url)), photo.file).toBe(true);
     }
   });
 
-  it('gives every real gym a photo', () => {
-    const real = tagCounts(listings);
-    for (const g of listings) expect(gymImage(g, { counts: real }).src).toMatch(/\.webp$/);
+  it('photoFor finds any listed photo and returns null for unknown files', () => {
+    expect(photoFor('spin-4.webp').alt.length).toBeGreaterThan(10);
+    expect(photoFor('nope.webp')).toBeNull();
+  });
+});
+
+describe('the real gyms', () => {
+  it('give every gym a photoTag that is one of its own tags', () => {
+    for (const g of listings) expect(g.tags, `photoTag of ${g.name}`).toContain(g.photoTag);
+  });
+
+  it('show 45 different photos: no two gyms share a card photo', () => {
+    const shown = listings.map((g) => file(gymImage(g)));
+    expect(shown).toHaveLength(45);
+    expect(new Set(shown).size).toBe(45);
+  });
+
+  it('show a photo that belongs to the gym\'s photoTag', () => {
+    for (const g of listings) {
+      const own = PHOTOS[g.photoTag].map((p) => p.file);
+      expect(own, g.name).toContain(file(gymImage(g)));
+      expect(g.photos[0], `${g.name} names its own photo first`).toBe(file(gymImage(g)));
+    }
+  });
+
+  it('show an outdoor photo for every "open-air" gym', () => {
+    const openAir = listings.filter((g) => g.description.includes('Open-air'));
+    expect(openAir.length).toBeGreaterThan(0);
+    for (const g of openAir) expect(gymImage(g).tag, g.name).toBe('outdoor');
   });
 });

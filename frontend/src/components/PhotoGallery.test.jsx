@@ -27,7 +27,7 @@ describe('PhotoGallery', () => {
   });
 
   it('has a labelled button per photo, the first one pressed', () => {
-    render(<PhotoGallery photos={['spin-1.webp', 'spin-2.webp', 'weights.webp']} gymName="Pedal" />);
+    render(<PhotoGallery photos={['spin-1.webp', 'strength.webp', 'weights.webp']} gymName="Pedal" />);
     expect(screen.getByRole('group', { name: /photos of pedal/i })).toBeTruthy();
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(3);
@@ -37,7 +37,7 @@ describe('PhotoGallery', () => {
   });
 
   it('a button swaps the big photo and says which one is showing', () => {
-    render(<PhotoGallery photos={['spin-1.webp', 'spin-2.webp', 'weights.webp']} gymName="Pedal" />);
+    render(<PhotoGallery photos={['spin-1.webp', 'strength.webp', 'weights.webp']} gymName="Pedal" />);
     fireEvent.click(screen.getByRole('button', { name: 'Show photo 3 of 3' }));
     const big = document.querySelector('.gallery-main');
     expect(big.getAttribute('src')).toMatch(/weights\.webp$/);
@@ -47,14 +47,14 @@ describe('PhotoGallery', () => {
   });
 
   it('thumbnails have empty alt, so screen readers hear the button label once', () => {
-    render(<PhotoGallery photos={['spin-1.webp', 'spin-2.webp']} gymName="Pedal" />);
+    render(<PhotoGallery photos={['spin-1.webp', 'strength.webp']} gymName="Pedal" />);
     for (const thumb of document.querySelectorAll('.gallery-thumb img')) {
       expect(thumb.getAttribute('alt')).toBe('');
     }
   });
 
   it('goes back to the first photo when given a different gym', () => {
-    const { rerender } = render(<PhotoGallery photos={['spin-1.webp', 'spin-2.webp']} gymName="Pedal" />);
+    const { rerender } = render(<PhotoGallery photos={['spin-1.webp', 'strength.webp']} gymName="Pedal" />);
     fireEvent.click(screen.getByRole('button', { name: 'Show photo 2 of 2' }));
     rerender(<PhotoGallery photos={['boxing.webp', 'yoga.webp']} gymName="Other" />);
     expect(document.querySelector('.gallery-main').getAttribute('src')).toMatch(/boxing\.webp$/);

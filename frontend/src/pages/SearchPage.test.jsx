@@ -118,14 +118,14 @@ describe('SearchPage photos', () => {
     expect(photos[0].getAttribute('loading')).toBe('lazy');
   });
 
-  it('shows the photo of the tag the visitor searched for', async () => {
-    // classes is on 2 gyms, boxing on 1, so classes is more popular.
-    fetchListings.mockResolvedValue([gyms[0], { ...gyms[2], tags: ['classes', 'boxing'] }]);
+  it('shows each gym photoTag photo, and a search does not change it', async () => {
+    fetchListings.mockResolvedValue([gyms[0], { ...gyms[2], tags: ['classes', 'boxing'], photoTag: 'boxing' }]);
     show(<SearchPage />);
     await screen.findByText('Gamma Boxing');
-    expect(screen.getAllByRole('img', { name: /fitness class/i })).toHaveLength(2);
-    searchNow('boxing');
-    expect(screen.getByRole('img', { name: /sparring/i })).toBeTruthy();
+    expect(screen.getAllByRole('img', { name: /fitness class/i })).toHaveLength(1);
+    expect(screen.getAllByRole('img', { name: /sparring/i })).toHaveLength(1);
+    searchNow('Gamma');
+    expect(screen.getAllByRole('img', { name: /sparring/i })).toHaveLength(1);
   });
 });
 

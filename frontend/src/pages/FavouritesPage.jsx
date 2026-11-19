@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { fetchListings } from '../api/listings.js';
-import { gymImage, tagCounts } from '../lib/gymImage.js';
+import { gymImage } from '../lib/gymImage.js';
 import GymCard from '../components/GymCard.jsx';
 
 // The gyms the visitor saved with the heart. Saved ids live in localStorage
@@ -26,7 +26,6 @@ export default function FavouritesPage({ favourites = [], onToggleFavourite }) {
     setAttempt((n) => n + 1);
   };
 
-  const counts = useMemo(() => tagCounts(data.listings), [data.listings]);
   // A to Z by name, like ties on the search page.
   const saved = data.listings
     .filter((g) => favourites.includes(g.id))
@@ -71,7 +70,7 @@ export default function FavouritesPage({ favourites = [], onToggleFavourite }) {
               <GymCard
                 key={gym.id}
                 gym={gym}
-                image={gymImage(gym, { query: '', counts })}
+                image={gymImage(gym)}
                 isFavourite
                 onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(gym.id))}
               />
