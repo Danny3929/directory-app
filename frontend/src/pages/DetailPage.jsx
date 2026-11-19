@@ -130,7 +130,7 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
         </article>
       )}
 
-      {status === 'ready' && <EnquiryForm key={slug} gymName={gym.name} />}
+      {status === 'ready' && <EnquiryForm key={slug} slug={slug} gymName={gym.name} />}
 
       {/* Shown while loading or failed; hidden only once we know there are none. */}
       {status === 'ready' && (similar.status !== 'ready' || similar.gyms.length > 0) && (
