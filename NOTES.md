@@ -170,3 +170,12 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Flaky test: `npm test` failed 1 of 263 once, then passed 4 runs in a row. I did not catch which test. Probably the known "load more" timing problem; needs a look.
 - Task 3 Explain-it answers are left for Dan to write in his own words (README questions 5 to 8).
 - Explain-it 5 to 8: Dan answered by multiple-choice cards (Joy allowed this for the README) and picked the recommended answer each time; written into the README.
+
+## Slice notes: register endpoint, Task 4 step 2 (2026-11-20)
+- New app `accounts`: `Profile` (one per user, role `visitor` or `owner`) and `POST /api/v1/auth/register/` taking only `email`, `password`, `role`. Staff is Django's `is_staff`, never a role a user can pick.
+- Email is trimmed and lower-cased, and doubles as the username, so the database's unique username also guards against two sign-ups racing each other (that case is a 400, not a 500; tested by faking the race).
+- Passwords go through Django's 4 validators (length, common, numeric, too like the email). `write_only`, so never sent back; the test checks the log too.
+- Proof the tests can fail: switching off `validate_password` made 4 tests fail.
+- Real-server check found a 500 that was my fault, not the code's: a test server I thought I had stopped was still on port 8031, using the dev database without the new table. Rule: after stopping a server, check the port is free before trusting a new run.
+- Known trade-off: "An account with this email already exists" tells a stranger that email is registered. The guide asks for a unique email, so the message stays; step 3's throttling slows anyone trying many emails.
+- Run `python manage.py migrate` once on your dev database to get the new table.

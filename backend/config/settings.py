@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "listings",
+    "accounts",
 ]
 
 MIDDLEWARE = [
