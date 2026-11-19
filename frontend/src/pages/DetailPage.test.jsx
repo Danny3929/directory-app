@@ -3,29 +3,27 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useParams } from 'react-router';
 import DetailPage from './DetailPage.jsx';
-import { fetchListing, fetchTagCounts, fetchSimilarListings } from '../api/listings.js';
+import { fetchListing, fetchSimilarListings } from '../api/listings.js';
 
 vi.mock('../api/listings.js', () => ({
   fetchListing: vi.fn(),
-  fetchTagCounts: vi.fn(),
   fetchSimilarListings: vi.fn(),
 }));
 
 const gym = {
   id: 3, slug: 'baobab-barbell', name: 'Baobab Barbell', description: 'Boxing bags and coached sessions.',
-  tags: ['boxing', 'strength'], address: '59 Wood Ave', area: 'Kilimani', city: 'Nairobi',
+  tags: ['boxing', 'strength'], photoTag: 'boxing', address: '59 Wood Ave', area: 'Kilimani', city: 'Nairobi',
   priceMin: 3500, priceMax: 5000, isFeatured: true, lat: -1.29, lng: 36.78,
   photos: ['boxing.webp', 'strength.webp', 'weights.webp'],
 };
 
 const similar = [
-  { ...gym, id: 7, slug: 'iron-house', name: 'Iron House', address: '2 Iron Rd', tags: ['weights'], photos: ['weights.webp'], isFeatured: false },
-  { ...gym, id: 8, slug: 'jab-club', name: 'Jab Club', address: '8 Jab Lane', tags: ['strength'], photos: ['strength.webp'], description: 'Lifting.', isFeatured: false },
+  { ...gym, id: 7, slug: 'iron-house', name: 'Iron House', address: '2 Iron Rd', tags: ['weights'], photoTag: 'weights', photos: ['weights.webp'], isFeatured: false },
+  { ...gym, id: 8, slug: 'jab-club', name: 'Jab Club', address: '8 Jab Lane', tags: ['strength'], photoTag: 'strength', photos: ['strength.webp'], description: 'Lifting.', isFeatured: false },
 ];
 
 beforeEach(() => {
   fetchListing.mockReset().mockResolvedValue(structuredClone(gym));
-  fetchTagCounts.mockReset().mockResolvedValue({ strength: 10, boxing: 5 });
   fetchSimilarListings.mockReset().mockResolvedValue(structuredClone(similar));
   window.history.replaceState(null, '', '/');
 });
@@ -37,28 +35,17 @@ const inRouter = (ui, entry = '/listing/baobab-barbell') => <MemoryRouter initia
 const show = (props = {}, entry) => render(inRouter(<DetailPage slug="baobab-barbell" {...props} />, entry));
 
 describe('DetailPage photo', () => {
-  it('shows the most popular tag photo (strength) with alt text', async () => {
+  it('shows the photo of the photoTag (boxing) with alt text', async () => {
     show();
-    await screen.findByText('Baobab Barbell');
-    await screen.findByText('Baobab Barbell');
-    const img = document.querySelector('.gallery-main');
-    expect(img.getAttribute('alt')).toMatch(/lat machine/i);
-    expect(img.getAttribute('src')).toMatch(/strength\.webp$/);
-  });
-
-  it('shows the boxing photo when the search in the address says boxing, like the card did', async () => {
-    show({}, { pathname: '/listing/baobab-barbell', state: { from: '/?q=boxing' } });
     await screen.findByText('Baobab Barbell');
     const img = document.querySelector('.gallery-main');
     expect(img.getAttribute('alt')).toMatch(/sparring/i);
     expect(img.getAttribute('src')).toMatch(/boxing\.webp$/);
   });
 
-  it('still shows the gym and a photo when the tag counts fail', async () => {
-    fetchTagCounts.mockRejectedValue(new Error('down'));
-    show();
+  it('shows the same photo even when the visitor came from a search for another tag', async () => {
+    show({}, { pathname: '/listing/baobab-barbell', state: { from: '/?q=weights' } });
     await screen.findByText('Baobab Barbell');
-    // No counts: boxing and strength tie, so A to Z gives boxing.
     expect(document.querySelector('.gallery-main').getAttribute('src')).toMatch(/boxing\.webp$/);
   });
 });
@@ -135,15 +122,15 @@ describe('DetailPage favourite button', () => {
 });
 
 describe('DetailPage gallery', () => {
-  it('starts on the photo the card showed, then the gym\'s other photos', async () => {
+  it('starts on the photo the card showed (its photoTag), then the gym\'s other photos', async () => {
     show();
     await screen.findByText('Baobab Barbell');
-    // Card photo is strength (most popular tag), so it goes first.
-    expect(document.querySelector('.gallery-main').getAttribute('src')).toMatch(/strength\.webp$/);
+    // The card photo is the photoTag photo (boxing), so it goes first.
+    expect(document.querySelector('.gallery-main').getAttribute('src')).toMatch(/boxing\.webp$/);
     const buttons = await screen.findAllByRole('button', { name: /show photo/i });
     expect(buttons).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: 'Show photo 2 of 3' }));
-    expect(document.querySelector('.gallery-main').getAttribute('src')).toMatch(/boxing\.webp$/);
+    expect(document.querySelector('.gallery-main').getAttribute('src')).toMatch(/strength\.webp$/);
   });
 });
 

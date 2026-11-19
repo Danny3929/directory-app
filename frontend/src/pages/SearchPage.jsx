@@ -107,7 +107,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   // The radius is kept in the address even without a ZIP, but only used once we know where "you" are.
   const radiusOn = Boolean(origin && filters.radius);
 
-  // How many gyms have each tag: the chip counts and the "most popular tag" photo rule.
+  // How many gyms have each tag: the chip counts.
   const counts = useMemo(() => tagCounts(data.listings), [data.listings]);
   const allTags = Object.keys(counts).sort();
   // A tag in a shared link that no gym has is ignored, like ?radius=7.
@@ -381,7 +381,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
               <GymCard
                 key={gym.id}
                 gym={gym}
-                image={gymImage(gym, { query: filters.q, counts })}
+                image={gymImage(gym)}
                 overBudget={isOverBudget(gym, budget) ? budget : null}
                 isFavourite={favourites.includes(gym.id)}
                 onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(gym.id))}

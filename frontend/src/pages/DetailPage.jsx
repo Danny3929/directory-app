@@ -5,11 +5,10 @@ import GymCard from '../components/GymCard.jsx';
 import PhotoGallery from '../components/PhotoGallery.jsx';
 import EnquiryForm from '../components/EnquiryForm.jsx';
 import { DetailSkeleton } from '../components/Skeletons.jsx';
-import { fetchListing, fetchSimilarListings, fetchTagCounts } from '../api/listings.js';
+import { fetchListing, fetchSimilarListings } from '../api/listings.js';
 import { gymImage } from '../lib/gymImage.js';
 import { formatPrice } from '../lib/price.js';
-import { parseSearch } from '../lib/urlState.js';
-import { backLink, searchOf } from '../lib/route.js';
+import { backLink } from '../lib/route.js';
 
 // One gym in full. The page asks the fake API for it by slug and shows one of:
 // loading, error (with Try again), not found, or the gym.
@@ -20,7 +19,6 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
   const back = backLink(cameFrom);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ status: 'loading', gym: null, error: '' });
-  const [counts, setCounts] = useState({});
   // Similar gyms load on their own, so a failure there never hides the gym.
   // Each answer remembers which load it belongs to; until the current one
   // answers, the section shows 'loading' (no setState inside the effect).
@@ -43,10 +41,6 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
 
   useEffect(() => {
     let cancelled = false;
-    // Only for the photo. If it fails the page still works: ties then go A to Z.
-    fetchTagCounts()
-      .then((c) => !cancelled && setCounts(c))
-      .catch(() => {});
     fetchListing(slug)
       .then((gym) => {
         if (!cancelled) setState({ status: gym ? 'ready' : 'notfound', gym, error: '' });
@@ -66,9 +60,7 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
   };
 
   const { status, gym, error } = state;
-  // The search the visitor came from (?q=) picks the same photo the card showed.
-  const query = parseSearch(searchOf(cameFrom)).q;
-  const image = gym && gymImage(gym, { query, counts });
+  const image = gym && gymImage(gym);
   // The gallery starts on the photo the card showed, then the gym's others.
   const shownFile = image?.src.split('/').pop();
   const photos = gym ? [shownFile, ...(gym.photos ?? []).filter((f) => f !== shownFile)] : [];
@@ -159,7 +151,7 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
                 <GymCard
                   key={other.id}
                   gym={other}
-                  image={gymImage(other, { query, counts })}
+                  image={gymImage(other)}
                   isFavourite={favourites.includes(other.id)}
                   onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(other.id))}
                   // Keep the visitor's original search, so Back still goes there.

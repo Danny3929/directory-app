@@ -3,7 +3,7 @@
 All photos are from [Unsplash](https://unsplash.com) under the free
 [Unsplash License](https://unsplash.com/license): free to use, no permission
 needed. Credit is not required, but we give it anyway. No Unsplash+ (paid) photos.
-Each licence page was checked on 2026-11-15.
+Each licence page was checked on 2026-11-15 (the last three added on 2026-11-19).
 
 Files are in `frontend/public/images/`, cropped and shrunk to WebP (960x540,
 hero 1600x640).
@@ -18,5 +18,8 @@ hero 1600x640).
 | `pilates.webp` | Gyms tagged `pilates` | Roxana Popovici | [woman does a pilates exercise on a reformer](https://unsplash.com/photos/woman-does-a-pilates-exercise-on-a-reformer-cZ0WYsBFHhs) |
 | `outdoor.webp` | Gyms tagged `outdoor` | Lawrence Crayton | [man in gray tank top holding gray metal bar](https://unsplash.com/photos/man-in-gray-tank-top-holding-gray-metal-bar-ICwuKvw9QJk) |
 | `classes.webp` | Gyms tagged `classes`, and the fallback | Kaspars Eglitis | [group of women running on brown wooden floor](https://unsplash.com/photos/group-of-women-running-on-brown-wooden-floor-Vdx-2lsuhm0) |
-| `spin-1.webp` | Gyms tagged `spin` (even ids) | Sam Moghadam | [group of people on exercise bikes](https://unsplash.com/photos/group-of-people-sitting-on-black-bench-W8CyjblrF8U) |
-| `spin-2.webp` | Gyms tagged `spin` (odd ids) | Amari Shutters | [row of red stationary exercise bikes in gym](https://unsplash.com/photos/row-of-red-stationary-exercise-bikes-in-gym-9FBx4LwGpFc) |
+| `spin-1.webp` | Gyms tagged `spin` | Sam Moghadam | [group of people on exercise bikes](https://unsplash.com/photos/group-of-people-sitting-on-black-bench-W8CyjblrF8U) |
+| `spin-2.webp` | Not used since 2026-11-19 (one photo per tag) | Amari Shutters | [row of red stationary exercise bikes in gym](https://unsplash.com/photos/row-of-red-stationary-exercise-bikes-in-gym-9FBx4LwGpFc) |
+| `personal-training.webp` | Gyms with photoTag `personal-training` | Sergio Kian | [a man and a woman working out in a gym](https://unsplash.com/photos/a-man-and-a-woman-working-out-in-a-gym-G6svDyPVRrc) |
+| `cardio.webp` | Gyms with photoTag `cardio` | Aalo Lens | [modern gym with treadmills and large windows](https://unsplash.com/photos/modern-gym-with-treadmills-and-large-windows-asVNiNtSSXE) |
+| `womens.webp` | Gyms with photoTag `womens` | Asso Myron | [two women stand together confidently in a gym](https://unsplash.com/photos/two-women-stand-together-confidently-in-a-gym-Umao82hW4j0) |
