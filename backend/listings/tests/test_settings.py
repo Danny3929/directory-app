@@ -59,3 +59,14 @@ def test_debug_is_off_and_hosts_are_not_wildcard_by_default():
     result = import_settings_with({"DJANGO_SECRET_KEY": "x"})
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "False ['localhost', '127.0.0.1']"
+
+
+def test_database_comes_from_database_url(tmp_path):
+    db = (tmp_path / "other.sqlite3").as_posix()
+    code = "import config.settings as s; print(s.DATABASES['default']['NAME'])"
+    env = {"SYSTEMROOT": os.environ.get("SYSTEMROOT", ""), "DJANGO_ENV_FILE_SKIP": "1",
+           "DJANGO_SECRET_KEY": "x", "DATABASE_URL": f"sqlite:///{db}"}
+    result = subprocess.run([sys.executable, "-c", code], cwd=BACKEND, env=env,
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == db
