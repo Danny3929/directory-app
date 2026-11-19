@@ -145,3 +145,12 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Laptop (1100px and up): page 1200px wide, 3 cards per row, card photos 2:1 instead of 16:9, Price on the first row with Within and Sort by. Detail page stays 960px so its photo is not blown up.
 - Bug found in the screenshots: at 768px the Sort by box poked out past the screen edge. Cause: a select in a grid keeps its text width unless the field has `min-width: 0`. Fixed.
 - Test first: the new gymImage tests failed on the old code (8 of 18), then passed. 245 tests pass, lint clean, build works; screenshots at 390, 768 and 1366px.
+## Slice notes: frontend talks to the Django API (2026-11-20, Task 3 step 10)
+- `src/api/listings.js` now calls the API (address from `VITE_API_URL`, default `http://localhost:8000/api`). `toGym()` turns the API's snake_case gym into the shape the pages already use, so no page changed except the detail page passing `slug` to the enquiry form.
+- The API had no `id`, but favourites are saved by `id`. Fix: the API sends `id`, and `seed_listings` keeps each gym's Task 2 id, so favourites saved before still point at the same gym.
+- The API has no photo group (`photoTag`). The mapper finds it from the gym's first photo.
+- The list comes 12 per page, so `fetchListings` follows `next` (4 requests for 45 gyms). The search page still filters in the browser; the API's own filters are ready for later.
+- Enquiry form: the browser checks first, then Django checks again. Django's wrong-box messages show next to the box and focus it; a 429 or a stopped backend shows one plain message and keeps what the visitor typed. The Send button is disabled while sending.
+- Tests use a fake backend (`src/test/fakeBackend.js`) so they need no server. Broke three things on purpose, each made a test fail: removed the double-send guard, turned every error into "not found", showed server text on a 500. Then ran the real code against the real server (it worked) and with the server stopped (plain message).
+- Found while checking: another program on this laptop already uses port 8000, so the Django server would not start there. Left it alone; used 8010 for the check.
+- Known limit: the API sorts a gym's tags by name, so the tag order on a card can differ from Task 2. Nothing depends on that order.
