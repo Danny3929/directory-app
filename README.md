@@ -22,7 +22,7 @@ The fake API waits half a second before it answers, so the loading state is easy
 
 | State | Desktop | Phone |
 |---|---|---|
-| Loading | ![Loading gyms message under the search form](docs/screenshots/desktop-loading.png) | ![Loading gyms message on a phone](docs/screenshots/phone-loading.png) |
+| Loading | ![Grey loading skeletons under the search form](docs/screenshots/desktop-loading.png) | ![Grey loading skeletons on a phone](docs/screenshots/phone-loading.png) |
 | Empty (nothing matches) | ![No gyms match, with a Clear search button](docs/screenshots/desktop-empty.png) | ![No gyms match on a phone](docs/screenshots/phone-empty.png) |
 | Error | ![Could not load gyms, with a Try again button](docs/screenshots/desktop-error.png) | ![Error with Try again on a phone](docs/screenshots/phone-error.png) |
 
@@ -139,19 +139,19 @@ _My own answers, in my own words._
 
 **1. What happens, step by step, from typing in the search box to the results changing?**
 
-> _(Dan to write.)_
+> I type, and the page waits 0.3 seconds so it does not search on every letter. Then the text is saved in the address bar (`?q=`), and the page works out which gyms to show from the URL.
 
 **2. How does the haversine formula work in plain English? What is its accuracy limit?**
 
-> We can't use Pythagoras because of the curved earth surface. _(Dan to finish: what the formula does instead, and its accuracy limit.)_
+> We can't use Pythagoras because of the curved earth surface. _(Dan to finish: what the formula does instead.)_ Its limit: it treats the Earth as a perfect ball, but the Earth is slightly flattened, so it is a straight-line estimate, not road distance. For gyms a few km apart the error is tiny.
 
 **3. Why keep filter state in the URL instead of component state?**
 
-> _(Dan to write.)_
+> So Reload, Back and a link sent to a friend keep the same search. If the filters lived only in React's memory, they would be lost each time.
 
 **4. Why does keyboard focus move to the first new gym after Load more?** (my own extra question)
 
-> _(Dan to write.)_
+> So keyboard and screen-reader users land on the new gyms. If focus stayed on the button, they could not tell that 12 new gyms appeared below.
 
 ## What the AI got wrong
 
@@ -160,8 +160,8 @@ I built this with an AI assistant. Here is where it went wrong and how I noticed
 - It said Task 2 only needed a README and a deploy. When we checked against every line of the guide, the radius, tag and price filters, debounce, 12 per page, React Router pages, gallery, similar gyms, enquiry form and Favourites page were all still missing.
 - It first used `#/gym/3` style addresses instead of the React Router routes the guide asks for.
 - On a 390 px phone, the Max price box ran off the right edge of the screen. We spotted it on a screenshot.
+- Its first skeleton test looked for the "Loading gyms…" words to be gone, but they stay for screen readers (hidden on screen). The test was wrong, not the page.
 - Its first version of Similar gyms hid the whole section while reloading after "Try again", which lost keyboard focus. A test caught it.
-- **Still open:** the guide asks for loading **skeletons**, but the pages show a "Loading gyms…" message instead.
 
 ## Known limits
 

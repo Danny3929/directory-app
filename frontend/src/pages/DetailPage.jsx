@@ -4,6 +4,7 @@ import FavouriteButton from '../components/FavouriteButton.jsx';
 import GymCard from '../components/GymCard.jsx';
 import PhotoGallery from '../components/PhotoGallery.jsx';
 import EnquiryForm from '../components/EnquiryForm.jsx';
+import { DetailSkeleton } from '../components/Skeletons.jsx';
 import { fetchListing, fetchSimilarListings, fetchTagCounts } from '../api/listings.js';
 import { gymImage } from '../lib/gymImage.js';
 import { formatPrice } from '../lib/price.js';
@@ -83,7 +84,12 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
         ← {back.label}
       </Link>
 
-      {status === 'loading' && <p role="status">Loading gym…</p>}
+      {status === 'loading' && (
+        <>
+          <p role="status" className="visually-hidden">Loading gym…</p>
+          <DetailSkeleton />
+        </>
+      )}
 
       {status === 'error' && (
         <div className="notice notice-error" role="alert">

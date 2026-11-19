@@ -208,3 +208,12 @@ describe('DetailPage enquiry form', () => {
     expect(screen.getByLabelText(/your name/i)).toBeTruthy();
   });
 });
+describe('DetailPage loading skeleton', () => {
+  it('shows a placeholder block, with one "Loading gym" message for screen readers', () => {
+    fetchListing.mockReturnValue(new Promise(() => {}));
+    show();
+    expect(document.querySelector('.detail-skeleton')).not.toBeNull();
+    expect(document.querySelector('.detail-skeleton').getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getAllByRole('status').filter((el) => /loading gym/i.test(el.textContent))).toHaveLength(1);
+  });
+});

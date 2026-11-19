@@ -7,6 +7,7 @@ import { gymImage, tagCounts } from '../lib/gymImage.js';
 import { tagLabel } from '../lib/tags.js';
 import { isOverBudget, priceRangeError, priceText } from '../lib/price.js';
 import GymCard from '../components/GymCard.jsx';
+import { GymGridSkeleton } from '../components/Skeletons.jsx';
 
 const ZIP_LENGTH = 5;
 const PRICE_DIGITS = 6;
@@ -309,9 +310,13 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
       )}
 
       {data.status === 'loading' && (
-        <p role="status" className="muted">
-          Loading gyms…
-        </p>
+        <>
+          {/* One real message for screen readers; the grey cards are hidden from them. */}
+          <p role="status" className="visually-hidden">
+            Loading gyms…
+          </p>
+          <GymGridSkeleton count={PAGE_SIZE} />
+        </>
       )}
 
       {data.status === 'error' && (

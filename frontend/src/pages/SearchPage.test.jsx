@@ -510,3 +510,31 @@ describe('SearchPage Load more (Dan spec 2026-11-15: 12 a time, a new search goe
     expect(screen.queryByRole('button', { name: /load more/i })).toBeNull();
   });
 });
+
+describe('SearchPage loading skeletons', () => {
+  const never = () => new Promise(() => {});
+
+  it('shows 12 grey placeholder cards while gyms load, not the old text', () => {
+    fetchListings.mockReturnValue(never());
+    fetchZips.mockReturnValue(never());
+    show(<SearchPage />);
+    expect(document.querySelectorAll('.card-skeleton')).toHaveLength(12);
+    // The words are still there for screen readers, but no longer shown on screen.
+    expect(screen.getByText(/loading gyms…/i).className).toContain('visually-hidden');
+  });
+
+  it('screen readers get one "Loading gyms" message and the placeholders are hidden', () => {
+    fetchListings.mockReturnValue(never());
+    fetchZips.mockReturnValue(never());
+    show(<SearchPage />);
+    expect(screen.getAllByRole('status').filter((el) => /loading gyms/i.test(el.textContent))).toHaveLength(1);
+    const grid = document.querySelector('.card-skeleton').closest('ul');
+    expect(grid.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('the placeholders go away when the gyms arrive', async () => {
+    show(<SearchPage />);
+    await screen.findByText('Alpha Gym');
+    expect(document.querySelectorAll('.card-skeleton')).toHaveLength(0);
+  });
+});
