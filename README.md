@@ -139,19 +139,19 @@ _My own answers, in my own words._
 
 **1. What happens, step by step, from typing in the search box to the results changing?**
 
-> I type, and the page waits 0.3 seconds so it does not search on every letter. Then the text is saved in the address bar (`?q=`), and the page works out which gyms to show from the URL.
+> When I type, the page waits a short moment (0.3 seconds) before doing anything, so it is not searching after every single letter. I learned this is called a "debounce". After the wait, my text gets put in the address bar at the top (the bit that looks like `?q=`). Then the page looks at that address to work out which gyms to show. I still find it odd that the address is what drives the results, but that is how it works.
 
 **2. How does the haversine formula work in plain English? What is its accuracy limit?**
 
-> We can't use Pythagoras because of the curved earth surface. _(Dan to finish: what the formula does instead.)_ Its limit: it treats the Earth as a perfect ball, but the Earth is slightly flattened, so it is a straight-line estimate, not road distance. For gyms a few km apart the error is tiny.
+> Haversine is a way to find the distance between two spots on Earth. You give it two points, like where you are standing and where you want to go, and it tells you how far apart they are along the curve of the ground. I don't know all the fancy maths or map words yet. The way I picture it: if you drew a straight line through the Earth like a tunnel, that would be shorter. Haversine doesn't do the tunnel. It follows the roundness of the planet, like stretching a string over a globe. Maps, GPS and location apps use it so they don't pretend the world is flat. Its limit, as far as I understand it: it pretends the Earth is a perfect ball, but it is actually a bit squashed. So the answer is an estimate of the straight line between two points, not the distance you would drive on roads. For gyms only a few km apart, the mistake is very small.
 
 **3. Why keep filter state in the URL instead of component state?**
 
-> So Reload, Back and a link sent to a friend keep the same search. If the filters lived only in React's memory, they would be lost each time.
+> So that if I reload the page, press Back, or send the link to a friend, they see the same search. If the filters were only kept in React's memory (what I think is called "state"), they would disappear every time the page reloaded, and a shared link would just show everything.
 
 **4. Why does keyboard focus move to the first new gym after Load more?** (my own extra question)
 
-> So keyboard and screen-reader users land on the new gyms. If focus stayed on the button, they could not tell that 12 new gyms appeared below.
+> Focus is where the keyboard is "pointing" on the page. Someone using only a keyboard or a screen reader cannot see the new gyms appear, so if focus stayed on the button they would not know anything changed. Moving it to the first new gym takes them straight there.
 
 ## What the AI got wrong
 
