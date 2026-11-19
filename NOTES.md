@@ -136,3 +136,12 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Removed: the popularity rule, the search rule, and the second spin photo (`spin-2.webp` is unused; left in place, not deleted). Detail page no longer fetches tag counts.
 - Test first: the new gymImage tests failed on the old code (8 failures), then passed. Tests 240 pass, lint clean, build works, checked at 390px for outdoor and cardio.
 - Known limit: 5 gyms still share each photo. Task 3 adds each gym's own uploads.
+
+## Slice notes: every gym its own photo, plus laptop layout (2026-11-19)
+- Problem: 45 gyms shared 9 photos, so cards next to each other repeated (5 gyms per photo).
+- Fix: each tag now has 5 photos (35 new free Unsplash photos, all checked as free and not Unsplash+; credits in CREDITS.md). The first file in a gym's `photos` list is its own card photo and must belong to its `photoTag`. 45 gyms, 45 different photos. `spin-2.webp` is used again.
+- The AI's first pick for a women's gym photo showed a man training too; swapped before it went in. Picking photos by search words alone is not enough: look at each one.
+- Gallery: own photo, the next photo of the same tag, then pilates/strength if the gym has that tag.
+- Laptop (1100px and up): page 1200px wide, 3 cards per row, card photos 2:1 instead of 16:9, Price on the first row with Within and Sort by. Detail page stays 960px so its photo is not blown up.
+- Bug found in the screenshots: at 768px the Sort by box poked out past the screen edge. Cause: a select in a grid keeps its text width unless the field has `min-width: 0`. Fixed.
+- Test first: the new gymImage tests failed on the old code (8 of 18), then passed. 245 tests pass, lint clean, build works; screenshots at 390, 768 and 1366px.
