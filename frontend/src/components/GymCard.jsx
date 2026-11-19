@@ -8,10 +8,12 @@ import FavouriteButton from './FavouriteButton.jsx';
 // image is { src, alt } from gymImage(); the card works without it.
 // overBudget is the visitor's Max when some of this gym's plans cost more (Dan's 'show, but mark it').
 // from overrides the page the link remembers (similar gyms pass on the original search).
-export default function GymCard({ gym, image, overBudget = null, isFavourite = false, onToggleFavourite, from }) {
+// headingLevel is 2 under the page title and 3 under the Similar gyms h2, so headings never skip a level.
+export default function GymCard({ gym, image, overBudget = null, isFavourite = false, onToggleFavourite, from, headingLevel = 2 }) {
   const hasDistance = Number.isFinite(gym.distanceKm);
   // The link remembers this page (with its ?search), so Back on the detail page returns here.
   const here = useLocation();
+  const Heading = headingLevel === 3 ? 'h3' : 'h2';
 
   return (
     <li className="card">
@@ -20,11 +22,11 @@ export default function GymCard({ gym, image, overBudget = null, isFavourite = f
         <img className="card-photo" src={image.src} alt={image.alt} width="960" height="540" loading="lazy" decoding="async" />
       )}
       <div className="card-top">
-        <h3>
+        <Heading>
           <Link to={gymPath(gym.slug)} state={{ from: from ?? here.pathname + here.search }}>
             {gym.name}
           </Link>
-        </h3>
+        </Heading>
         {gym.isFeatured && <span className="badge">Featured</span>}
         {onToggleFavourite && (
           <FavouriteButton gymName={gym.name} isFavourite={isFavourite} onToggle={onToggleFavourite} />

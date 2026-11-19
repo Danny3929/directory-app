@@ -145,6 +145,8 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Laptop (1100px and up): page 1200px wide, 3 cards per row, card photos 2:1 instead of 16:9, Price on the first row with Within and Sort by. Detail page stays 960px so its photo is not blown up.
 - Bug found in the screenshots: at 768px the Sort by box poked out past the screen edge. Cause: a select in a grid keeps its text width unless the field has `min-width: 0`. Fixed.
 - Test first: the new gymImage tests failed on the old code (8 of 18), then passed. 245 tests pass, lint clean, build works; screenshots at 390, 768 and 1366px.
+- 2026-11-20 accessibility: the accessibility tree of the live search page goes heading level 1 then level 3 (gym names are `h3`, no `h2`). Screen reader users who jump by heading level can miss the list. Fixed on branch fix/heading-levels: cards are h2 on the search and saved pages, h3 under Similar gyms. The Load more focus code looked for `h3 a` and broke, so I changed it to `.card-top a`; a test caught it.
+
 ## Slice notes: frontend talks to the Django API (2026-11-20, Task 3 step 10)
 - `src/api/listings.js` now calls the API (address from `VITE_API_URL`, default `http://localhost:8000/api`). `toGym()` turns the API's snake_case gym into the shape the pages already use, so no page changed except the detail page passing `slug` to the enquiry form.
 - The API had no `id`, but favourites are saved by `id`. Fix: the API sends `id`, and `seed_listings` keeps each gym's Task 2 id, so favourites saved before still point at the same gym.

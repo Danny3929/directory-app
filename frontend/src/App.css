@@ -15,7 +15,9 @@ h1 {
   margin: 0 0 var(--space-lg);
 }
 
-h3 {
+/* Gym names on cards: h2 on the search and saved pages, h3 under Similar gyms. */
+.card-top h2,
+.card-top h3 {
   font-size: var(--font-lg);
   line-height: 1.2;
   margin: 0;
