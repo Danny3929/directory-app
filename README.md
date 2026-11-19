@@ -2,7 +2,7 @@
 
 A searchable directory of gyms in and around Nairobi. You can search by name, filter by distance from your ZIP code, tags and monthly price, save favourites, and open a page for each gym with photos, similar gyms and an enquiry form.
 
-This is Task 2 of my Crepton Tech trial (Directory Search UI). It is frontend only for now. The data is a local JSON file behind a fake API, and Task 3 will replace it with a Django backend.
+This is Tasks 2 and 3 of my Crepton Tech trial (Directory Search UI, then Django REST API). The React frontend in `frontend/` reads its gyms from a Django REST API in `backend/`. The gym data started as a local JSON file and is now loaded into the database with `seed_listings`.
 
 **Live site:** https://directory-app-two.vercel.app
 
@@ -18,7 +18,7 @@ This is Task 2 of my Crepton Tech trial (Directory Search UI). It is frontend on
 
 ### Loading, empty and error states
 
-The fake API waits half a second before it answers, so the loading state is easy to see. To see the error state, open the site with `?fail=1` in the address. The first load then fails, and **Try again** works.
+These screenshots were taken in Task 2 with the fake API, which waited half a second so the loading state was easy to see. With the real API, the loading state shows while the request runs, and the error state shows if the backend is stopped. You can still force the error state by opening the site with `?fail=1` in the address; **Try again** then works.
 
 | State | Desktop | Phone |
 |---|---|---|
@@ -35,21 +35,51 @@ The fake API waits half a second before it answers, so the loading state is easy
 - **Sort:** featured first, cheapest, or nearest. Ties go A to Z by name.
 - **12 at a time:** **Load more** adds 12 more and moves keyboard focus to the first new gym. Any new search goes back to the first 12.
 - **Everything is in the address.** For example `/?q=fit&tags=weights&min=2000&page=2`. A reload, the Back button or a shared link shows the same results. A broken value in the address (like `?page=abc`) falls back to the default instead of breaking the page.
-- **Gym page** at `/listing/<slug>`: a photo gallery, full details, up to 3 similar gyms (most shared tags first), and an enquiry form. The form is a demo, so nothing is sent.
+- **Gym page** at `/listing/<slug>`: a photo gallery, full details, up to 3 similar gyms (most shared tags first), and an enquiry form. The form sends the message to the API, which checks it again and allows 5 per hour.
 - **Saved gyms** at `/favourites`: the heart button saves a gym in this browser (`localStorage`). A saved gym that no longer exists shows a "no longer available" card.
 
 ## Run it yourself
 
-You need [Node.js](https://nodejs.org) 22 or newer.
+You need [Node.js](https://nodejs.org) 22 or newer and [Python](https://www.python.org) 3.12 or newer. Start the backend first, then the frontend. Use two terminals.
+
+### 1. Backend (Django API)
 
 ```bash
 git clone https://github.com/Danny3929/directory-app.git
+cd directory-app/backend
+python -m venv .venv
+.venv\Scripts\activate             # Mac/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+copy .env.example .env             # Mac/Linux: cp .env.example .env
+```
+
+Open `backend/.env` and put your own secret key on the `DJANGO_SECRET_KEY` line. Make one with `python -c "import secrets; print(secrets.token_urlsafe(50))"`. Never commit `.env`. Then:
+
+```bash
+python manage.py migrate
+python manage.py seed_listings     # loads the 45 gyms; safe to run twice
+python manage.py createsuperuser   # optional, for the admin at /admin/
+python manage.py runserver         # http://localhost:8000
+```
+
+If port 8000 is already taken on your computer, run `python manage.py runserver 8010` and set `VITE_API_URL=http://localhost:8010/api` in `frontend/.env`.
+
+Check it works: open <http://localhost:8000/api/health/> (you should see `{"status": "ok"}`) and <http://localhost:8000/api/docs/> (Swagger page).
+
+### 2. Frontend
+
+```bash
 cd directory-app/frontend
+copy .env.example .env             # Mac/Linux: cp .env.example .env
 npm install
 npm run dev        # opens on http://localhost:5173
 ```
 
-Other commands, all run inside `frontend/`:
+`VITE_API_URL` in `frontend/.env` is the address of the API. If the backend is stopped, the pages show "Could not load gyms. Please try again."
+
+Test commands: `python -m pytest` inside `backend/` (76 tests) and `npm test` inside `frontend/` (263 tests).
+
+Other frontend commands, all run inside `frontend/`:
 
 | Command | What it does |
 |---|---|
@@ -58,11 +88,57 @@ Other commands, all run inside `frontend/`:
 | `npm run build` | makes the production files in `frontend/dist/` |
 | `npm run preview` | serves that build locally |
 
+## Backend (Task 3)
+
+Django 6, Django REST Framework, django-filter, django-cors-headers, drf-spectacular and pytest-django. SQLite on a laptop; set `DATABASE_URL` for another database.
+
+**Data model**
+
+| Model | What it holds |
+|---|---|
+| `Tag` | name, slug. Many-to-many with `Listing` |
+| `Listing` | name, slug, description, address, area, city, zip code, latitude, longitude, price min and max (whole shillings), `featured_until`, `is_published`, `owner` (empty until Task 4) |
+| `ListingImage` | the gym, image, alt text, position. Deleted with its gym |
+| `Enquiry` | the gym, name, email, message, `is_read`. A gym with enquiries cannot be deleted, so staff unpublish it instead |
+
+"Featured" means `featured_until` is in the future, so nothing has to run to expire it.
+
+**Endpoints** (all under `/api/`)
+
+| Method and path | What it does |
+|---|---|
+| `GET /listings/` | 12 per page, featured first, then by name. Filters: `search`, `tags`, `price_min`, `price_max`, `zip`, `ordering`, and `lat` + `lng` + `radius_km` (adds `distance_km`) |
+| `GET /listings/{slug}/` | one gym with its photos and tags |
+| `POST /listings/{slug}/enquiries/` | public; checked on the server; 5 per hour per IP; returns 201 |
+| `GET /tags/` | all tags |
+| `GET /health/` | `{"status": "ok"}` |
+| `GET /schema/`, `GET /docs/` | OpenAPI file and Swagger page |
+
+Only published gyms are shown. Hidden gyms give 404. Every error has the same shape, `{"error": {"code", "message", "fields"}}`, and no stack trace reaches the visitor. The distance and featured rules live in `listings/services.py`, not in the views.
+
+**Settings (environment variables)**
+
+| Variable | What it does |
+|---|---|
+| `DJANGO_SECRET_KEY` | required; the server will not start without it |
+| `DJANGO_DEBUG` | `False` unless set to `True` |
+| `DJANGO_ALLOWED_HOSTS` | comma-separated hosts |
+| `CORS_ALLOWED_ORIGINS` | comma-separated frontend addresses |
+| `DATABASE_URL` | optional; leave out to use `backend/db.sqlite3` |
+
+**Backend tests:** `python -m pytest` inside `backend/` runs 76 tests (enquiries 18, listings 13, seed command 9, distance and featured rules 9, models 7, settings 7, tags/health/docs 6, admin 5). They cover each filter, the distance radius, 12 per page, enquiry checks, the 5-per-hour limit, a query count limit (`django_assert_max_num_queries`), and hidden gyms. To prove they can fail, I broke the all-or-nothing seed, the hidden-gym rule and the price-overlap rule on purpose, and a test failed each time.
+
+**Known limits**
+
+- Search and filters still run in the browser. The API's own filters are built and tested but the pages do not use them yet.
+- The limit of 5 enquiries per hour counts by IP address. Behind a proxy every visitor can look like one IP, so this needs `NUM_PROXIES` set when the API is deployed (Task 5).
+- The API's paths are `/api/...`, not `/api/v1/...` as in the guide.
+
 ## How the code is organised
 
 ```
 frontend/src/
-  api/listings.js     the only place that reads the data (fake API with a delay)
+  api/listings.js     the only place that reads the data (calls the Django API; ZIP codes still come from a local file)
   data/               listings.json (45 gyms) and zips.json
   lib/                plain functions with no React: search, filters, sorting,
                       distance (geo.js), URL reading and writing (urlState.js),
@@ -72,13 +148,13 @@ frontend/src/
   App.jsx             top menu and the three routes (React Router)
 ```
 
-**Swappable data layer:** no page or component imports the JSON files. They all call `fetchListings`, `fetchListing(slug)`, `fetchZips`, `fetchTagCounts` and `fetchSimilarListings(slug)` in `src/api/listings.js`. In Task 3, only the inside of that file changes to real HTTP calls.
+**Swappable data layer:** no page or component imports the JSON files. They all call `fetchListings`, `fetchListing(slug)`, `fetchZips`, `fetchTagCounts` and `fetchSimilarListings(slug)` in `src/api/listings.js`. In Task 3, only the inside of that file changed, to real HTTP calls (`VITE_API_URL`), and `toGym()` turns the API's snake_case fields into the shape the pages use.
 
 The search and filter rules are plain functions in `src/lib/`, tested on their own before any screen was built.
 
 ## Tests
 
-`npm test` output (19 files, 245 tests):
+`npm test` output from Task 2 (19 files, 245 tests; it is now 263 with the API tests, and the commands are above):
 
 ```
  RUN  v5.1.0 C:/Users/hp/crepton/directory-app/frontend
@@ -153,6 +229,24 @@ _My own answers, in my own words._
 
 > Focus is where the keyboard is "pointing" on the page. Someone using only a keyboard or a screen reader cannot see the new gyms appear, so if focus stayed on the button they would not know anything changed. Moving it to the first new gym takes them straight there.
 
+### Task 3 questions
+
+**5. What is an N+1 query? Show where one could have happened in your code and how you avoided it.**
+
+> _Dan's answer: not written yet._
+
+**6. What is the difference between a serializer and a viewset? Why are they separate?**
+
+> _Dan's answer: not written yet._
+
+**7. Why throttle the enquiry endpoint, and what could still go wrong?**
+
+> _Dan's answer: not written yet._
+
+**8. (my own extra question) Why are a gym's tags many-to-many, but its photos one-to-many?**
+
+> _Dan's answer: not written yet._
+
 ## What the AI got wrong
 
 I built this with an AI assistant. Here is where it went wrong and how I noticed. The full list is in [NOTES.md](NOTES.md).
@@ -166,5 +260,5 @@ I built this with an AI assistant. Here is where it went wrong and how I noticed
 ## Known limits
 
 - Coordinates and prices are invented and were not checked on a map.
-- Only 9 stock photos, so similar gyms often share a photo. Task 3's uploads will fix this.
+- Each gym has its own card photo, but the gallery photos are shared stock photos. Task 4's uploads will fix this.
 - Distance is "as the crow flies", not by road.

@@ -154,3 +154,9 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Tests use a fake backend (`src/test/fakeBackend.js`) so they need no server. Broke three things on purpose, each made a test fail: removed the double-send guard, turned every error into "not found", showed server text on a 500. Then ran the real code against the real server (it worked) and with the server stopped (plain message).
 - Found while checking: another program on this laptop already uses port 8000, so the Django server would not start there. Left it alone; used 8010 for the check.
 - Known limit: the API sorts a gym's tags by name, so the tag order on a card can differ from Task 2. Nothing depends on that order.
+
+## Slice notes: README and done checklist, step 11 (2026-11-20)
+- README now has backend setup (venv, `.env`, migrate, seed, runserver), the frontend steps, both test commands, the data model, endpoints and the env variable table. Not yet followed from a clean folder, so "a stranger can do it in 10 minutes" is unproven.
+- Gap found against the guide: the API lives at `/api/...`, but the guide and checklist say `/api/v1/...` (`/api/v1/docs/`). Not changed yet; it touches the backend URLs, tests and `VITE_API_URL`.
+- Flaky test: `npm test` failed 1 of 263 once, then passed 4 runs in a row. I did not catch which test. Probably the known "load more" timing problem; needs a look.
+- Task 3 Explain-it answers are left for Dan to write in his own words (README questions 5 to 8).
