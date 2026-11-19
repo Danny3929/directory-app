@@ -156,6 +156,7 @@ export default function DetailPage({ slug, favourites = [], onToggleFavourite })
                   onToggleFavourite={onToggleFavourite && (() => onToggleFavourite(other.id))}
                   // Keep the visitor's original search, so Back still goes there.
                   from={back.to}
+                  headingLevel={3}
                 />
               ))}
             </ul>

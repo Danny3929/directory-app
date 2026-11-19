@@ -144,7 +144,7 @@ export default function SearchPage({ favourites = [], onToggleFavourite }) {
   const focusFrom = useRef(null);
   useEffect(() => {
     if (focusFrom.current == null) return;
-    const links = gridRef.current?.querySelectorAll('h3 a');
+    const links = gridRef.current?.querySelectorAll('.card-top a');
     links?.[focusFrom.current]?.focus();
     focusFrom.current = null;
   }, [shown.length]);
