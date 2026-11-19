@@ -144,6 +144,14 @@ describe('DetailPage similar gyms', () => {
     expect(fetchSimilarListings.mock.calls[0][0]).toBe('baobab-barbell');
   });
 
+  it('headings go down one level at a time: the page h1, Similar gyms h2, each gym h3', async () => {
+    show();
+    const section = await screen.findByRole('region', { name: /similar gyms/i });
+    await within(section).findByRole('link', { name: 'Iron House' });
+    expect(within(section).getByRole('heading', { level: 2, name: /similar gyms/i })).toBeTruthy();
+    expect(within(section).getByRole('heading', { level: 3, name: 'Iron House' })).toBeTruthy();
+  });
+
   it('a similar gym link keeps the search the visitor started from', async () => {
     // A real route, so clicking the link opens the next gym's page.
     const BySlug = () => <DetailPage slug={useParams().slug} />;

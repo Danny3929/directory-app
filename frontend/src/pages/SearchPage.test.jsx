@@ -30,7 +30,7 @@ const zips = [
   { zip: '00100', label: 'Nairobi CBD', lat: -1.2864, lng: 36.8172 },
 ];
 
-const names = () => screen.queryAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+const names = () => screen.queryAllByRole('heading', { level: 2 }).map((h) => h.textContent);
 const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
 // Type in the search box, then press Enter, which searches at once (no 0.3 s wait).
 const searchNow = (value) => {
