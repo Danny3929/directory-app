@@ -1,36 +1,47 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { sendEnquiry } from '../api/listings.js';
 import { enquiryErrors, MESSAGE_MIN } from '../lib/enquiry.js';
 
 const EMPTY = { name: '', email: '', message: '' };
 const ORDER = ['name', 'email', 'message'];
 
-// The enquiry form on the detail page. UI only for now: nothing is sent.
-// Task 3 posts it to Django, which must check everything again.
-export default function EnquiryForm({ gymName }) {
+// The enquiry form on the detail page. The browser checks first (quick help),
+// then Django checks again, because the browser's checks can be skipped.
+export default function EnquiryForm({ gymName, slug }) {
   const id = useId();
   const [values, setValues] = useState(EMPTY);
   // Errors only show after the first Send, so nobody is told off mid-typing.
   const [tried, setTried] = useState(false);
   const [sentBy, setSentBy] = useState(null);
+  const [sending, setSending] = useState(false);
+  // What the server said was wrong: { fields: { email: 'text' }, message: 'text' }.
+  const [serverError, setServerError] = useState(null);
   const boxes = { name: useRef(null), email: useRef(null), message: useRef(null) };
   const thanksRef = useRef(null);
+  const problemRef = useRef(null);
   // What to focus after the screen changes: 'thanks' or 'name'.
   const [focusNext, setFocusNext] = useState(null);
 
-  const errors = tried ? enquiryErrors(values) : {};
+  const errors = { ...(tried ? enquiryErrors(values) : {}), ...(serverError?.fields ?? {}) };
 
   useEffect(() => {
     if (focusNext === 'thanks') thanksRef.current?.focus();
     if (focusNext === 'name') boxes.name.current?.focus();
+    if (focusNext === 'problem') problemRef.current?.focus();
     if (focusNext) setFocusNext(null);
     // boxes are refs, they never change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusNext]);
 
-  const change = (event) => setValues((v) => ({ ...v, [event.target.name]: event.target.value }));
+  const change = (event) => {
+    setValues((v) => ({ ...v, [event.target.name]: event.target.value }));
+    // Typing in a box clears the server's complaint about that box.
+    setServerError((e) => e && { ...e, fields: { ...e.fields, [event.target.name]: undefined } });
+  };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
+    if (sending) return;
     const found = enquiryErrors(values);
     const firstWrong = ORDER.find((box) => found[box]);
     if (firstWrong) {
@@ -39,14 +50,35 @@ export default function EnquiryForm({ gymName }) {
       boxes[firstWrong].current.focus();
       return;
     }
-    setSentBy(values.name.trim());
-    setFocusNext('thanks');
+    setSending(true);
+    setServerError(null);
+    try {
+      await sendEnquiry(slug, {
+        name: values.name.trim(), email: values.email.trim(), message: values.message.trim(),
+      });
+      setSentBy(values.name.trim());
+      setFocusNext('thanks');
+    } catch (err) {
+      // The API gives { box: ['text'] }; show the first sentence per box.
+      const fields = Object.fromEntries(
+        Object.entries(err.fields ?? {})
+          .filter(([box]) => ORDER.includes(box))
+          .map(([box, list]) => [box, Array.isArray(list) ? list[0] : String(list)]),
+      );
+      setServerError({ fields, message: err.message });
+      const firstWrong = ORDER.find((box) => fields[box]);
+      if (firstWrong) boxes[firstWrong].current.focus();
+      else setFocusNext('problem');
+    } finally {
+      setSending(false);
+    }
   };
 
   const again = () => {
     setValues(EMPTY);
     setTried(false);
     setSentBy(null);
+    setServerError(null);
     setFocusNext('name');
   };
 
@@ -59,7 +91,7 @@ export default function EnquiryForm({ gymName }) {
         {/* tabIndex -1 lets us move focus here so the thank-you is read out. */}
         <div className="notice" role="status" tabIndex={-1} ref={thanksRef}>
           {/* React writes this as text, so a name like <img ...> cannot run as HTML. */}
-          <p>Thanks, {sentBy}. This is a demo, so nothing was sent yet.</p>
+          <p>Thanks, {sentBy}. Your message was sent to {gymName}.</p>
           <button type="button" onClick={again}>
             Send another
           </button>
@@ -89,7 +121,11 @@ export default function EnquiryForm({ gymName }) {
   return (
     <section className="enquiry" aria-labelledby={headingId}>
       <h2 id={headingId}>Ask {gymName}</h2>
-      <p className="muted">This form is a demo: nothing is sent yet.</p>
+      {serverError?.message && (
+        <div className="notice" role="alert" tabIndex={-1} ref={problemRef}>
+          <p>{serverError.message}</p>
+        </div>
+      )}
       {/* noValidate: our own messages instead of the browser's, the same in every browser. */}
       <form onSubmit={submit} noValidate>
         <div className="field">
@@ -110,7 +146,9 @@ export default function EnquiryForm({ gymName }) {
           <textarea rows={5} {...boxProps('message', `${id}-message-hint`)} />
           {errorText('message')}
         </div>
-        <button type="submit">Send enquiry</button>
+        <button type="submit" disabled={sending}>
+          {sending ? 'Sending…' : 'Send enquiry'}
+        </button>
       </form>
     </section>
   );
