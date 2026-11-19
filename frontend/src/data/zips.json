@@ -64,5 +64,29 @@
     "label": "Gigiri",
     "lat": -1.23,
     "lng": 36.803
+  },
+  {
+    "zip": "00618",
+    "label": "Ruaka",
+    "lat": -1.2095,
+    "lng": 36.779
+  },
+  {
+    "zip": "00511",
+    "label": "Rongai",
+    "lat": -1.396,
+    "lng": 36.745
+  },
+  {
+    "zip": "00241",
+    "label": "Kitengela",
+    "lat": -1.473,
+    "lng": 36.96
+  },
+  {
+    "zip": "01000",
+    "label": "Thika",
+    "lat": -1.0333,
+    "lng": 37.0693
   }
 ]

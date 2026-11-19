@@ -3,30 +3,68 @@
 
 export const SORTS = ['featured', 'cheapest', 'distance'];
 export const DEFAULT_SORT = 'featured';
+// The guide's four choices, in km. Anything else in ?radius= is ignored.
+export const RADII = [5, 10, 25, 50];
 
 // Anyone can edit the address by hand, so we cap the length and
 // fall back to the default for a sort value we do not know.
 const MAX_LENGTH = 100;
+const MAX_TAGS = 10;
+const TAG_SHAPE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+// '?tags=Yoga,boxing,,yoga' -> ['boxing', 'yoga']: trimmed, lower case,
+// no repeats, A to Z (so the same choice always makes the same link).
+function parseTags(text) {
+  const tags = (text ?? '')
+    .split(',')
+    .map((t) => t.trim().toLowerCase())
+    .filter((t) => TAG_SHAPE.test(t));
+  return [...new Set(tags)].sort().slice(0, MAX_TAGS);
+}
+
+// Whole Ksh amounts only, up to 6 digits: '4000' -> 4000; '4000.5', '-5', '1e3' -> null.
+const PRICE_SHAPE = /^\d{1,6}$/;
+const parsePrice = (text) => (PRICE_SHAPE.test(text ?? '') ? Number(text) : null);
+
+// ?page=3 means "Load more was pressed twice": 3 lots of 12 are showing.
+// A whole number from 1 to MAX_PAGE; anything else means page 1.
+export const MAX_PAGE = 50;
+const parsePage = (text) => {
+  const page = /^\d{1,2}$/.test(text ?? '') ? Number(text) : 1;
+  return page >= 1 && page <= MAX_PAGE ? page : 1;
+};
 
 export function parseSearch(search) {
   const params = new URLSearchParams(search);
   const sort = params.get('sort');
+  // Compare as text first, so '10.0' or '1e1' do not sneak in as 10.
+  const radius = RADII.find((km) => String(km) === params.get('radius')) ?? null;
   return {
     q: (params.get('q') ?? '').slice(0, MAX_LENGTH),
     zip: (params.get('zip') ?? '').slice(0, MAX_LENGTH),
     sort: SORTS.includes(sort) ? sort : DEFAULT_SORT,
-    saved: params.get('saved') === '1',
+    radius,
+    tags: parseTags(params.get('tags')),
+    min: parsePrice(params.get('min')),
+    max: parsePrice(params.get('max')),
+    page: parsePage(params.get('page')),
   };
 }
 
 // Only choices that differ from the default go in the address, so the
 // plain page keeps a clean URL. Returns '' or a string starting with '?'.
-export function buildSearch({ q, zip, sort, saved }) {
+export function buildSearch({ q, zip, sort, radius, tags, min, max, page }) {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (zip) params.set('zip', zip);
   if (sort && sort !== DEFAULT_SORT) params.set('sort', sort);
-  if (saved) params.set('saved', '1');
-  const text = params.toString();
+  if (RADII.includes(radius)) params.set('radius', String(radius));
+  if (tags?.length) params.set('tags', [...tags].sort().join(','));
+  // != null keeps 0, which is a real amount.
+  if (min != null) params.set('min', String(min));
+  if (max != null) params.set('max', String(max));
+  if (page > 1) params.set('page', String(page));
+  // URLSearchParams writes a comma as %2C; a plain comma is allowed and easier to read.
+  const text = params.toString().replace(/%2C/g, ',');
   return text ? `?${text}` : '';
 }
