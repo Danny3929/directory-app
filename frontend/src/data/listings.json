@@ -18,7 +18,8 @@
     ],
     "photoTag": "classes",
     "photos": [
-      "classes.webp"
+      "classes.webp",
+      "classes-2.webp"
     ],
     "isFeatured": false
   },
@@ -42,6 +43,7 @@
     "photoTag": "yoga",
     "photos": [
       "yoga.webp",
+      "yoga-2.webp",
       "pilates.webp"
     ],
     "isFeatured": true
@@ -66,7 +68,7 @@
     "photoTag": "outdoor",
     "photos": [
       "outdoor.webp",
-      "weights.webp"
+      "outdoor-2.webp"
     ],
     "isFeatured": false
   },
@@ -89,7 +91,8 @@
     ],
     "photoTag": "personal-training",
     "photos": [
-      "personal-training.webp"
+      "personal-training.webp",
+      "personal-training-2.webp"
     ],
     "isFeatured": false
   },
@@ -113,6 +116,7 @@
     "photoTag": "weights",
     "photos": [
       "weights.webp",
+      "weights-2.webp",
       "strength.webp"
     ],
     "isFeatured": false
@@ -136,7 +140,8 @@
     ],
     "photoTag": "cardio",
     "photos": [
-      "cardio.webp"
+      "cardio.webp",
+      "cardio-2.webp"
     ],
     "isFeatured": false
   },
@@ -160,6 +165,7 @@
     "photoTag": "boxing",
     "photos": [
       "boxing.webp",
+      "boxing-2.webp",
       "strength.webp"
     ],
     "isFeatured": false
@@ -184,7 +190,7 @@
     "photoTag": "spin",
     "photos": [
       "spin-1.webp",
-      "classes.webp"
+      "spin-2.webp"
     ],
     "isFeatured": true
   },
@@ -208,7 +214,7 @@
     "photoTag": "womens",
     "photos": [
       "womens.webp",
-      "classes.webp"
+      "womens-2.webp"
     ],
     "isFeatured": false
   },
@@ -231,7 +237,8 @@
     ],
     "photoTag": "classes",
     "photos": [
-      "classes.webp"
+      "classes-2.webp",
+      "classes-3.webp"
     ],
     "isFeatured": false
   },
@@ -254,7 +261,8 @@
     ],
     "photoTag": "yoga",
     "photos": [
-      "yoga.webp",
+      "yoga-2.webp",
+      "yoga-3.webp",
       "pilates.webp"
     ],
     "isFeatured": false
@@ -278,8 +286,8 @@
     ],
     "photoTag": "outdoor",
     "photos": [
-      "outdoor.webp",
-      "weights.webp"
+      "outdoor-2.webp",
+      "outdoor-3.webp"
     ],
     "isFeatured": false
   },
@@ -302,7 +310,8 @@
     ],
     "photoTag": "personal-training",
     "photos": [
-      "personal-training.webp"
+      "personal-training-2.webp",
+      "personal-training-3.webp"
     ],
     "isFeatured": false
   },
@@ -325,7 +334,8 @@
     ],
     "photoTag": "weights",
     "photos": [
-      "weights.webp",
+      "weights-2.webp",
+      "weights-3.webp",
       "strength.webp"
     ],
     "isFeatured": true
@@ -349,7 +359,8 @@
     ],
     "photoTag": "cardio",
     "photos": [
-      "cardio.webp"
+      "cardio-2.webp",
+      "cardio-3.webp"
     ],
     "isFeatured": false
   },
@@ -372,7 +383,8 @@
     ],
     "photoTag": "boxing",
     "photos": [
-      "boxing.webp",
+      "boxing-2.webp",
+      "boxing-3.webp",
       "strength.webp"
     ],
     "isFeatured": false
@@ -396,8 +408,8 @@
     ],
     "photoTag": "spin",
     "photos": [
-      "spin-1.webp",
-      "classes.webp"
+      "spin-2.webp",
+      "spin-3.webp"
     ],
     "isFeatured": false
   },
@@ -420,8 +432,8 @@
     ],
     "photoTag": "womens",
     "photos": [
-      "womens.webp",
-      "classes.webp"
+      "womens-2.webp",
+      "womens-3.webp"
     ],
     "isFeatured": false
   },
@@ -444,7 +456,8 @@
     ],
     "photoTag": "classes",
     "photos": [
-      "classes.webp"
+      "classes-3.webp",
+      "classes-4.webp"
     ],
     "isFeatured": false
   },
@@ -467,7 +480,8 @@
     ],
     "photoTag": "yoga",
     "photos": [
-      "yoga.webp",
+      "yoga-3.webp",
+      "yoga-4.webp",
       "pilates.webp"
     ],
     "isFeatured": false
@@ -491,8 +505,8 @@
     ],
     "photoTag": "outdoor",
     "photos": [
-      "outdoor.webp",
-      "weights.webp"
+      "outdoor-3.webp",
+      "outdoor-4.webp"
     ],
     "isFeatured": true
   },
@@ -515,7 +529,8 @@
     ],
     "photoTag": "personal-training",
     "photos": [
-      "personal-training.webp"
+      "personal-training-3.webp",
+      "personal-training-4.webp"
     ],
     "isFeatured": false
   },
@@ -538,7 +553,8 @@
     ],
     "photoTag": "weights",
     "photos": [
-      "weights.webp",
+      "weights-3.webp",
+      "weights-4.webp",
       "strength.webp"
     ],
     "isFeatured": false
@@ -562,7 +578,8 @@
     ],
     "photoTag": "cardio",
     "photos": [
-      "cardio.webp"
+      "cardio-3.webp",
+      "cardio-4.webp"
     ],
     "isFeatured": false
   },
@@ -585,7 +602,8 @@
     ],
     "photoTag": "boxing",
     "photos": [
-      "boxing.webp",
+      "boxing-3.webp",
+      "boxing-4.webp",
       "strength.webp"
     ],
     "isFeatured": false
@@ -609,8 +627,8 @@
     ],
     "photoTag": "spin",
     "photos": [
-      "spin-1.webp",
-      "classes.webp"
+      "spin-3.webp",
+      "spin-4.webp"
     ],
     "isFeatured": false
   },
@@ -633,8 +651,8 @@
     ],
     "photoTag": "womens",
     "photos": [
-      "womens.webp",
-      "classes.webp"
+      "womens-3.webp",
+      "womens-4.webp"
     ],
     "isFeatured": false
   },
@@ -657,7 +675,8 @@
     ],
     "photoTag": "classes",
     "photos": [
-      "classes.webp"
+      "classes-4.webp",
+      "classes-5.webp"
     ],
     "isFeatured": false
   },
@@ -680,7 +699,8 @@
     ],
     "photoTag": "yoga",
     "photos": [
-      "yoga.webp",
+      "yoga-4.webp",
+      "yoga-5.webp",
       "pilates.webp"
     ],
     "isFeatured": true
@@ -704,8 +724,8 @@
     ],
     "photoTag": "outdoor",
     "photos": [
-      "outdoor.webp",
-      "weights.webp"
+      "outdoor-4.webp",
+      "outdoor-5.webp"
     ],
     "isFeatured": false
   },
@@ -728,7 +748,8 @@
     ],
     "photoTag": "personal-training",
     "photos": [
-      "personal-training.webp"
+      "personal-training-4.webp",
+      "personal-training-5.webp"
     ],
     "isFeatured": false
   },
@@ -751,7 +772,8 @@
     ],
     "photoTag": "weights",
     "photos": [
-      "weights.webp",
+      "weights-4.webp",
+      "weights-5.webp",
       "strength.webp"
     ],
     "isFeatured": false
@@ -775,7 +797,8 @@
     ],
     "photoTag": "cardio",
     "photos": [
-      "cardio.webp"
+      "cardio-4.webp",
+      "cardio-5.webp"
     ],
     "isFeatured": false
   },
@@ -798,7 +821,8 @@
     ],
     "photoTag": "boxing",
     "photos": [
-      "boxing.webp",
+      "boxing-4.webp",
+      "boxing-5.webp",
       "strength.webp"
     ],
     "isFeatured": false
@@ -822,8 +846,8 @@
     ],
     "photoTag": "spin",
     "photos": [
-      "spin-1.webp",
-      "classes.webp"
+      "spin-4.webp",
+      "spin-5.webp"
     ],
     "isFeatured": false
   },
@@ -846,8 +870,8 @@
     ],
     "photoTag": "womens",
     "photos": [
-      "womens.webp",
-      "classes.webp"
+      "womens-4.webp",
+      "womens-5.webp"
     ],
     "isFeatured": true
   },
@@ -870,6 +894,7 @@
     ],
     "photoTag": "classes",
     "photos": [
+      "classes-5.webp",
       "classes.webp"
     ],
     "isFeatured": false
@@ -893,6 +918,7 @@
     ],
     "photoTag": "yoga",
     "photos": [
+      "yoga-5.webp",
       "yoga.webp",
       "pilates.webp"
     ],
@@ -917,8 +943,8 @@
     ],
     "photoTag": "outdoor",
     "photos": [
-      "outdoor.webp",
-      "weights.webp"
+      "outdoor-5.webp",
+      "outdoor.webp"
     ],
     "isFeatured": false
   },
@@ -941,6 +967,7 @@
     ],
     "photoTag": "personal-training",
     "photos": [
+      "personal-training-5.webp",
       "personal-training.webp"
     ],
     "isFeatured": false
@@ -964,6 +991,7 @@
     ],
     "photoTag": "weights",
     "photos": [
+      "weights-5.webp",
       "weights.webp",
       "strength.webp"
     ],
@@ -988,6 +1016,7 @@
     ],
     "photoTag": "cardio",
     "photos": [
+      "cardio-5.webp",
       "cardio.webp"
     ],
     "isFeatured": false
@@ -1011,6 +1040,7 @@
     ],
     "photoTag": "boxing",
     "photos": [
+      "boxing-5.webp",
       "boxing.webp",
       "strength.webp"
     ],
@@ -1035,8 +1065,8 @@
     ],
     "photoTag": "spin",
     "photos": [
-      "spin-1.webp",
-      "classes.webp"
+      "spin-5.webp",
+      "spin-1.webp"
     ],
     "isFeatured": false
   },
@@ -1059,8 +1089,8 @@
     ],
     "photoTag": "womens",
     "photos": [
-      "womens.webp",
-      "classes.webp"
+      "womens-5.webp",
+      "womens.webp"
     ],
     "isFeatured": false
   }
