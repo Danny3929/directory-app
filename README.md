@@ -231,21 +231,23 @@ _My own answers, in my own words._
 
 ### Task 3 questions
 
+_Picked from multiple-choice cards, as Joy allowed, then written up in my words._
+
 **5. What is an N+1 query? Show where one could have happened in your code and how you avoided it.**
 
-> _Dan's answer: not written yet._
+> N+1 means one query to get the list of gyms, then one more query for every gym to get its tags and photos. So 12 gyms would be about 25 queries instead of a few. It could have happened in `GET /listings/`. I avoided it with `prefetch_related("tags", "images")`, which loads all the tags and photos for the page in one go. A test checks the list page uses 4 queries at most.
 
 **6. What is the difference between a serializer and a viewset? Why are they separate?**
 
-> _Dan's answer: not written yet._
+> The serializer decides what a gym looks like as JSON, and it checks data coming in, like an enquiry's email. The viewset decides which URLs exist, who can call them, and which gyms to fetch (only published ones). They are separate so each does one job: I can change the JSON shape without touching the URLs, and use the same serializer in more than one place.
 
 **7. Why throttle the enquiry endpoint, and what could still go wrong?**
 
-> _Dan's answer: not written yet._
+> Anyone can send an enquiry without logging in, so a bot could flood gym owners with thousands of messages. The limit is 5 per hour per IP address. What can still go wrong: a spammer with many IP addresses gets around it; people sharing one IP (an office, or every visitor behind a proxy until `NUM_PROXIES` is set in Task 5) can block each other; and 5 spam messages an hour still get through.
 
 **8. (my own extra question) Why are a gym's tags many-to-many, but its photos one-to-many?**
 
-> _Dan's answer: not written yet._
+> One tag, like "weights", belongs to many gyms, and one gym has many tags, so both sides have many: many-to-many. A photo belongs to only one gym, so that is one-to-many, and when a gym is deleted its photos go with it.
 
 ## What the AI got wrong
 

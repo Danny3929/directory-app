@@ -160,3 +160,4 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Gap found against the guide: the API lives at `/api/...`, but the guide and checklist say `/api/v1/...` (`/api/v1/docs/`). Not changed yet; it touches the backend URLs, tests and `VITE_API_URL`.
 - Flaky test: `npm test` failed 1 of 263 once, then passed 4 runs in a row. I did not catch which test. Probably the known "load more" timing problem; needs a look.
 - Task 3 Explain-it answers are left for Dan to write in his own words (README questions 5 to 8).
+- Explain-it 5 to 8: Dan answered by multiple-choice cards (Joy allowed this for the README) and picked the recommended answer each time; written into the README.
