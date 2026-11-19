@@ -26,7 +26,7 @@ class ListingSerializer(serializers.ModelSerializer):
         model = Listing
         # An explicit list: owner and is_published are never sent out.
         fields = [
-            "slug", "name", "description", "address", "area", "city", "zip_code",
+            "id", "slug", "name", "description", "address", "area", "city", "zip_code",
             "latitude", "longitude", "price_min", "price_max", "tags", "images",
             "is_featured", "distance_km",
         ]

@@ -45,9 +45,12 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Seeded {len(rows)} gyms."))
 
     def save_row(self, row):
-        listing, created = Listing.objects.get_or_create(
-            slug=row["slug"], defaults=self.fields(row, is_published=True)
-        )
+        # New gyms keep the id they had in Task 2, so favourites saved in a
+        # browser still point at the same gym.
+        new_fields = self.fields(row, is_published=True)
+        if "id" in row:
+            new_fields["id"] = row["id"]
+        listing, created = Listing.objects.get_or_create(slug=row["slug"], defaults=new_fields)
         if not created:
             # Keep is_published as staff left it; refresh everything else.
             for key, value in self.fields(row).items():

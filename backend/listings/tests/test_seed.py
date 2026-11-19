@@ -95,3 +95,14 @@ def test_real_task_2_data_loads(tmp_path):
     assert Listing.objects.count() == 45
     assert Listing.objects.published().count() == 45
     assert not Listing.objects.filter(images__isnull=True).exists()
+
+
+def test_gyms_keep_their_task_2_id(tmp_path):
+    seed(tmp_path, [gym(id=7)])
+    assert Listing.objects.get(slug="flexline-fitness").pk == 7
+
+
+def test_api_sends_the_id(client, tmp_path):
+    seed(tmp_path, [gym(id=7)])
+    row = client.get("/api/listings/flexline-fitness/").json()
+    assert row["id"] == 7
