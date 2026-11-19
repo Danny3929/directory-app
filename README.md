@@ -120,11 +120,12 @@ The edge cases the guide asks for are covered, for example:
 
 ## Checks done by hand
 
-In real Chrome, at phone width (390 px) and on desktop:
+In real Chrome, at phone width (390 px) and on desktop, and on a real Android phone in the Brave browser (tested on the live site by Dan, 2026-11-06):
 
 - **Keyboard only:** tabbing through the search, gym and saved pages, the focus frame was always visible and focus never got stuck. Load more with Enter moved focus to gym 13, and "Back to search" brought back all 24 gyms.
 - **Reload and shared links:** 11 different addresses (filters, `?page=3`, a broken page number, Min above Max, an unknown ZIP, no results, a load error, a missing gym, a missing page) each looked the same after a reload. None of them scrolled sideways.
-- **Not checked yet:** a real screen reader, and shared links on the live site.
+- **Live site:** the home page, `?q=yoga`, `?zip=abc` and a photo file all return 200 on https://directory-app-two.vercel.app (checked 2026-11-20 by request only; the look was not re-checked on a screen).
+- **Not checked yet:** a real screen reader.
 
 ## Accessibility problems found and fixed
 
