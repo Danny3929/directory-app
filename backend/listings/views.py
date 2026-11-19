@@ -1,12 +1,16 @@
-from django.db.models import Q
+from django.db import connection
+from django.db.models import Count, Q
 from django.utils import timezone
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
+from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from . import services
-from .models import Listing
-from .serializers import ListingSerializer, SearchParamsSerializer
+from .models import Listing, Tag
+from .serializers import ListingSerializer, SearchParamsSerializer, TagCountSerializer
 
 
 class ListingPagination(PageNumberPagination):
@@ -63,3 +67,31 @@ class ListingViewSet(viewsets.ReadOnlyModelViewSet):
 
         page = self.paginate_queryset(qs)
         return self.get_paginated_response(self.get_serializer(page, many=True).data)
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """Tags used by at least one published gym, with how many gyms have each."""
+    serializer_class = TagCountSerializer
+    pagination_class = None  # a short list; the filter chips need all of it
+    filter_backends = []
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        # One query: the count is worked out in the database.
+        return (
+            Tag.objects.filter(listings__is_published=True)
+            .annotate(count=Count("listings"))
+            .order_by("name")
+        )
+
+
+@extend_schema(responses={200: OpenApiTypes.OBJECT, 503: OpenApiTypes.OBJECT})
+@api_view(["GET"])
+def health(request):
+    """For the host's uptime check. Never shows error details."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except Exception:
+        return Response({"status": "error", "database": "down"}, status=503)
+    return Response({"status": "ok", "database": "ok"})

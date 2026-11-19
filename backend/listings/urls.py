@@ -1,7 +1,15 @@
+from django.urls import path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
-from .views import ListingViewSet
+from .views import ListingViewSet, TagViewSet, health
 
 router = DefaultRouter()
 router.register("listings", ListingViewSet, basename="listing")
-urlpatterns = router.urls
+router.register("tags", TagViewSet, basename="tag")
+
+urlpatterns = [
+    path("health/", health, name="health"),
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
+] + router.urls

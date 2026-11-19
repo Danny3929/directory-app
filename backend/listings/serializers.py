@@ -62,3 +62,13 @@ class SearchParamsSerializer(serializers.Serializer):
         if data.get("sort") == "distance" and not has_point:
             raise serializers.ValidationError("sort=distance needs lat and lng.")
         return data
+
+
+class TagCountSerializer(serializers.ModelSerializer):
+    # count is added by the view: how many published gyms have this tag.
+    count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Tag
+        fields = ["name", "slug", "count"]
+        read_only_fields = fields
