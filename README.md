@@ -4,7 +4,7 @@ A searchable directory of gyms in and around Nairobi. You can search by name, fi
 
 This is Task 2 of my Crepton Tech trial (Directory Search UI). It is frontend only for now. The data is a local JSON file behind a fake API, and Task 3 will replace it with a Django backend.
 
-**Live site:** _coming soon (Vercel, after the pull request)_
+**Live site:** https://directory-app-two.vercel.app
 
 > Everything here is made up: the gym names, addresses, coordinates and prices are invented. Photos are free Unsplash photos, credited in [CREDITS.md](CREDITS.md).
 
