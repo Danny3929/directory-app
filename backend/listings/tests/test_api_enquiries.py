@@ -15,7 +15,7 @@ def gym(name="Alpha", published=True):
 
 
 def post(slug="alpha", data=None, client=None):
-    return (client or APIClient()).post(f"/api/listings/{slug}/enquiries/", GOOD if data is None else data, format="json")
+    return (client or APIClient()).post(f"/api/v1/listings/{slug}/enquiries/", GOOD if data is None else data, format="json")
 
 
 def test_valid_enquiry_is_saved_against_the_gym():
@@ -95,12 +95,12 @@ def test_throttle_does_not_slow_reading_listings():
     client = APIClient()
     for _ in range(6):
         post(client=client)
-    assert client.get("/api/listings/").status_code == 200
+    assert client.get("/api/v1/listings/").status_code == 200
 
 
 def test_get_on_enquiries_is_not_allowed():
     gym()
-    assert APIClient().get("/api/listings/alpha/enquiries/").status_code == 405
+    assert APIClient().get("/api/v1/listings/alpha/enquiries/").status_code == 405
 
 
 def test_unexpected_crash_is_a_plain_500_without_details(monkeypatch):

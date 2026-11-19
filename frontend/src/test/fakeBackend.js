@@ -3,7 +3,7 @@
 // built from the same Task 2 JSON the seed command loads.
 import listings from '../data/listings.json';
 
-export const API = 'http://localhost:8000/api';
+export const API = 'http://localhost:8000/api/v1';
 const PAGE = 12;
 
 // Task 2 gym -> what Django sends.
@@ -24,7 +24,7 @@ const notFound = () => json({ error: { code: 'not_found', message: 'Not found.',
 
 export function fakeFetch(url, init = {}) {
   const { pathname, searchParams } = new URL(url);
-  const path = pathname.replace(/^\/api/, '');
+  const path = pathname.replace(/^\/api\/v1/, '');
   if (path === '/listings/') {
     const page = Number(searchParams.get('page') ?? 1);
     const slice = listings.slice((page - 1) * PAGE, page * PAGE).map(toApiGym);

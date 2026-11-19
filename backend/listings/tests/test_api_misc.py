@@ -20,7 +20,7 @@ def test_tags_lists_every_tag_with_count_of_published_gyms_only():
     gym("A", tags=["Yoga", "Pool"])
     gym("B", tags=["Yoga"])
     gym("Hidden", published=False, tags=["Yoga", "Secret"])
-    resp = APIClient().get("/api/tags/")
+    resp = APIClient().get("/api/v1/tags/")
     assert resp.status_code == 200
     rows = {r["slug"]: r for r in resp.data}
     assert rows["yoga"] == {"name": "Yoga", "slug": "yoga", "count": 2}
@@ -32,12 +32,12 @@ def test_tags_is_not_paginated_and_uses_few_queries(django_assert_max_num_querie
     for i in range(20):
         gym(f"G{i}", tags=[f"Tag{i}"])
     with django_assert_max_num_queries(1):
-        resp = APIClient().get("/api/tags/")
+        resp = APIClient().get("/api/v1/tags/")
     assert len(resp.data) == 20
 
 
 def test_health_reports_ok_and_database():
-    resp = APIClient().get("/api/health/")
+    resp = APIClient().get("/api/v1/health/")
     assert resp.status_code == 200
     assert resp.data == {"status": "ok", "database": "ok"}
 
@@ -49,21 +49,21 @@ def test_health_is_503_when_database_is_down(monkeypatch):
         raise RuntimeError("secret connection string postgres://u:p@h/db")
 
     monkeypatch.setattr(connection, "cursor", boom)
-    resp = APIClient().get("/api/health/")
+    resp = APIClient().get("/api/v1/health/")
     assert resp.status_code == 503
     assert resp.data == {"status": "error", "database": "down"}
     assert "postgres" not in resp.content.decode()  # no leaked details
 
 
 def test_schema_is_openapi_and_lists_our_paths():
-    resp = APIClient().get("/api/schema/")
+    resp = APIClient().get("/api/v1/schema/")
     assert resp.status_code == 200
     body = resp.content.decode()
     assert "openapi:" in body
-    assert "/api/listings/" in body and "/api/tags/" in body
+    assert "/api/v1/listings/" in body and "/api/v1/tags/" in body
 
 
 def test_docs_page_loads():
-    resp = APIClient().get("/api/docs/")
+    resp = APIClient().get("/api/v1/docs/")
     assert resp.status_code == 200
     assert "text/html" in resp["Content-Type"]

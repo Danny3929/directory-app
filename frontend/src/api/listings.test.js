@@ -37,9 +37,9 @@ describe('fetchListings', () => {
     expect(fetch).toHaveBeenCalledTimes(4); // 45 gyms, 12 per page
   });
 
-  it('asks the address in VITE_API_URL (default localhost:8000/api)', async () => {
+  it('asks the address in VITE_API_URL (default localhost:8000/api/v1)', async () => {
     await fetchListings();
-    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/listings/');
+    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/v1/listings/');
   });
 
   it('fails on purpose with a friendly message when asked to, without calling the server', async () => {
@@ -88,7 +88,7 @@ describe('fetchListing', () => {
 
   it('puts a slug with odd characters safely in the address', async () => {
     await fetchListing('a/b?c');
-    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/listings/a%2Fb%3Fc/');
+    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/v1/listings/a%2Fb%3Fc/');
   });
 
   it('with the backend stopped it fails; it does not pretend the gym is missing', async () => {
@@ -132,7 +132,7 @@ describe('sendEnquiry', () => {
   it('posts JSON to the gym enquiry address', async () => {
     await sendEnquiry('flexline-fitness', good);
     const [url, init] = fetch.mock.calls[0];
-    expect(url).toBe('http://localhost:8000/api/listings/flexline-fitness/enquiries/');
+    expect(url).toBe('http://localhost:8000/api/v1/listings/flexline-fitness/enquiries/');
     expect(init.method).toBe('POST');
     expect(init.headers['Content-Type']).toBe('application/json');
     expect(JSON.parse(init.body)).toEqual(good);

@@ -104,5 +104,5 @@ def test_gyms_keep_their_task_2_id(tmp_path):
 
 def test_api_sends_the_id(client, tmp_path):
     seed(tmp_path, [gym(id=7)])
-    row = client.get("/api/listings/flexline-fitness/").json()
+    row = client.get("/api/v1/listings/flexline-fitness/").json()
     assert row["id"] == 7

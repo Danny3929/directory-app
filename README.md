@@ -62,9 +62,9 @@ python manage.py createsuperuser   # optional, for the admin at /admin/
 python manage.py runserver         # http://localhost:8000
 ```
 
-If port 8000 is already taken on your computer, run `python manage.py runserver 8010` and set `VITE_API_URL=http://localhost:8010/api` in `frontend/.env`.
+If port 8000 is already taken on your computer, run `python manage.py runserver 8010` and set `VITE_API_URL=http://localhost:8010/api/v1` in `frontend/.env`.
 
-Check it works: open <http://localhost:8000/api/health/> (you should see `{"status": "ok"}`) and <http://localhost:8000/api/docs/> (Swagger page).
+Check it works: open <http://localhost:8000/api/v1/health/> (you should see `{"status": "ok", "database": "ok"}`) and <http://localhost:8000/api/v1/docs/> (Swagger page).
 
 ### 2. Frontend
 
@@ -103,7 +103,7 @@ Django 6, Django REST Framework, django-filter, django-cors-headers, drf-spectac
 
 "Featured" means `featured_until` is in the future, so nothing has to run to expire it.
 
-**Endpoints** (all under `/api/`)
+**Endpoints** (all under `/api/v1/`)
 
 | Method and path | What it does |
 |---|---|
@@ -132,7 +132,6 @@ Only published gyms are shown. Hidden gyms give 404. Every error has the same sh
 
 - Search and filters still run in the browser. The API's own filters are built and tested but the pages do not use them yet.
 - The limit of 5 enquiries per hour counts by IP address. Behind a proxy every visitor can look like one IP, so this needs `NUM_PROXIES` set when the API is deployed (Task 5).
-- The API's paths are `/api/...`, not `/api/v1/...` as in the guide.
 
 ## How the code is organised
 

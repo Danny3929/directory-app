@@ -5,7 +5,7 @@ import zips from '../data/zips.json';
 import { PHOTOS, tagCounts } from '../lib/gymImage.js';
 import { similarGyms } from '../lib/similar.js';
 
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api').replace(/\/+$/, '');
+const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1').replace(/\/+$/, '');
 
 // Anything that goes wrong becomes an Error with a message safe to show.
 // status is the HTTP status, or 0 when the server could not be reached.

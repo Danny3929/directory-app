@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 from listings.models import Listing, ListingImage, Tag
 
 pytestmark = pytest.mark.django_db
-URL = "/api/listings/"
+URL = "/api/v1/listings/"
 
 
 @pytest.fixture
