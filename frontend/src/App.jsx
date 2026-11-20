@@ -3,6 +3,7 @@ import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-rout
 import SearchPage from './pages/SearchPage.jsx';
 import DetailPage from './pages/DetailPage.jsx';
 import FavouritesPage from './pages/FavouritesPage.jsx';
+import AuthPage from './pages/AuthPage.jsx';
 import { loadFavourites, saveFavourites, toggleFavourite } from './lib/favourites.js';
 import './App.css';
 
@@ -38,6 +39,8 @@ export default function App() {
         <Route path="/" element={<SearchPage favourites={favourites} onToggleFavourite={toggle} />} />
         <Route path="/listing/:slug" element={<DetailRoute favourites={favourites} onToggleFavourite={toggle} />} />
         <Route path="/favourites" element={<FavouritesPage favourites={favourites} onToggleFavourite={toggle} />} />
+        <Route path="/login" element={<AuthPage mode="login" />} />
+        <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

@@ -44,3 +44,7 @@ export function registerErrors({ email = '', password = '', role = '' } = {}) {
   if (!ROLES.includes(role)) errors.role = 'Choose how you will use this site.';
   return errors;
 }
+
+// Only follow a "where you were going" address that stays on this site.
+// "//evil.example" would leave it, so it is refused.
+export const safeFrom = (from) => (typeof from === 'string' && /^\/(?!\/)/.test(from) ? from : '/');
