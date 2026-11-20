@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router';
+import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
 import SearchPage from './pages/SearchPage.jsx';
 import DetailPage from './pages/DetailPage.jsx';
 import FavouritesPage from './pages/FavouritesPage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
+import { useAuth } from './AuthContext.jsx';
 import { loadFavourites, saveFavourites, toggleFavourite } from './lib/favourites.js';
 import './App.css';
 
@@ -34,6 +35,7 @@ export default function App() {
           Find a gym
         </NavLink>
         <NavLink to="/favourites">Saved gyms ({favourites.length})</NavLink>
+        <AccountLinks />
       </nav>
       <Routes>
         <Route path="/" element={<SearchPage favourites={favourites} onToggleFavourite={toggle} />} />
@@ -44,6 +46,33 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
+  );
+}
+
+// The right-hand part of the nav. While we are still asking the server who is
+// logged in, show nothing, so a logged-in person never sees a flash of "Log in".
+// A Dashboard link for owners comes with the dashboard page (step 12).
+function AccountLinks() {
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
+  if (loading) return null;
+  if (!user) {
+    return (
+      <span className="nav-account">
+        <NavLink to="/login">Log in</NavLink>
+        <NavLink to="/register">Register</NavLink>
+      </span>
+    );
+  }
+  const leave = async () => {
+    await logout().catch(() => {}); // the context forgets the user even if the call fails
+    navigate('/');
+  };
+  return (
+    <span className="nav-account">
+      <span className="nav-user">{user.email}</span>
+      <button type="button" onClick={leave}>Log out</button>
+    </span>
   );
 }
 

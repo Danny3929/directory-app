@@ -617,3 +617,27 @@ textarea {
   color: var(--color-accent-text);
   cursor: pointer;
 }
+
+/* Account links sit at the far end of the nav. */
+.nav-account {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-left: auto;
+}
+
+.nav-user {
+  font-size: var(--font-sm);
+  overflow-wrap: anywhere;
+}
+
+.site-nav {
+  flex-wrap: wrap;
+}
+
+.site-nav button {
+  min-height: var(--target-size);
+  padding: 0 var(--space-md);
+  cursor: pointer;
+}
