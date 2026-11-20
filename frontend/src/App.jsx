@@ -4,6 +4,8 @@ import SearchPage from './pages/SearchPage.jsx';
 import DetailPage from './pages/DetailPage.jsx';
 import FavouritesPage from './pages/FavouritesPage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { useAuth } from './AuthContext.jsx';
 import { loadFavourites, saveFavourites, toggleFavourite } from './lib/favourites.js';
 import './App.css';
@@ -43,6 +45,7 @@ export default function App() {
         <Route path="/favourites" element={<FavouritesPage favourites={favourites} onToggleFavourite={toggle} />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
+        <Route path="/dashboard" element={<ProtectedRoute role="owner"><DashboardPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
@@ -51,7 +54,7 @@ export default function App() {
 
 // The right-hand part of the nav. While we are still asking the server who is
 // logged in, show nothing, so a logged-in person never sees a flash of "Log in".
-// A Dashboard link for owners comes with the dashboard page (step 12).
+// Owners also get a Dashboard link.
 function AccountLinks() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
@@ -70,6 +73,7 @@ function AccountLinks() {
   };
   return (
     <span className="nav-account">
+      {user.role === 'owner' && <NavLink to="/dashboard">Dashboard</NavLink>}
       <span className="nav-user">{user.email}</span>
       <button type="button" onClick={leave}>Log out</button>
     </span>

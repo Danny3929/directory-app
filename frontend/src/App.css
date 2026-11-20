@@ -641,3 +641,65 @@ textarea {
   padding: 0 var(--space-md);
   cursor: pointer;
 }
+
+/* Owner dashboard */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.table-wrap {
+  overflow-x: auto; /* a wide table scrolls inside its box, not the whole page */
+}
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dash-table th,
+.dash-table td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.dash-table a,
+.dash-table button,
+.confirm button {
+  min-height: var(--target-size);
+  min-width: var(--target-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm {
+  max-width: 28rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: var(--space-lg);
+}
+
+.confirm::backdrop {
+  background: var(--color-hero-shade);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+}
+
+button.danger {
+  border: 2px solid var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
