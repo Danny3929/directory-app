@@ -3,7 +3,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router';
 import App from './App.jsx';
+import { useAuth } from './AuthContext.jsx';
 import { fetchListings, fetchZips, fetchListing } from './api/listings.js';
+
+// App only needs to know who is logged in; each test sets what useAuth returns.
+vi.mock('./AuthContext.jsx', () => ({ useAuth: vi.fn() }));
+
+vi.mock('./api/owner.js', () => ({ unreadCount: vi.fn(async () => 2) }));
 
 vi.mock('./api/listings.js', () => ({
   fetchListings: vi.fn(),
@@ -32,6 +38,7 @@ const openAt = (url) => {
 
 beforeEach(() => {
   localStorage.clear();
+  useAuth.mockReset().mockReturnValue({ user: null, loading: false, login: vi.fn(), logout: vi.fn() });
   fetchListings.mockReset().mockResolvedValue(structuredClone(gyms));
   fetchZips.mockReset().mockResolvedValue([]);
   fetchListing.mockReset().mockImplementation(async (slug) => structuredClone(gyms.find((g) => g.slug === slug) ?? null));
@@ -157,5 +164,54 @@ describe('App favourites', () => {
     expect(screen.queryByRole('link', { name: 'Alpha Gym' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Beta Gym' })).toBeTruthy();
     expect(JSON.parse(localStorage.getItem('gym-favourites'))).toEqual([2]);
+  });
+});
+
+describe('account links in the nav', () => {
+  const nav = () => within(screen.getByRole('navigation', { name: 'Main' }));
+
+  it('logged out: Log in and Register, no Log out', () => {
+    openAt('/');
+    expect(nav().getByRole('link', { name: 'Log in' }).getAttribute('href')).toBe('/login');
+    expect(nav().getByRole('link', { name: 'Register' })).toBeTruthy();
+    expect(nav().queryByRole('button', { name: 'Log out' })).toBeNull();
+  });
+
+  it('still checking who is logged in: neither set is shown', () => {
+    useAuth.mockReturnValue({ user: null, loading: true });
+    openAt('/');
+    expect(nav().queryByRole('link', { name: 'Log in' })).toBeNull();
+    expect(nav().queryByRole('button', { name: 'Log out' })).toBeNull();
+  });
+
+  it('logged in: shows the email and Log out, which logs out and goes home', async () => {
+    const logout = vi.fn().mockResolvedValue();
+    useAuth.mockReturnValue({ user: { email: 'o@x.co', role: 'owner' }, loading: false, logout });
+    openAt('/favourites');
+    expect(nav().getByText('o@x.co')).toBeTruthy();
+    expect(nav().queryByRole('link', { name: 'Log in' })).toBeNull();
+    fireEvent.click(nav().getByRole('button', { name: 'Log out' }));
+    await vi.waitFor(() => expect(window.location.pathname).toBe('/'));
+    expect(logout).toHaveBeenCalled();
+  });
+  it('Dashboard link is for owners only', () => {
+    useAuth.mockReturnValue({ user: { email: 'v@x.co', role: 'visitor' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    expect(nav().queryByRole('link', { name: 'Dashboard' })).toBeNull();
+    cleanup();
+    useAuth.mockReturnValue({ user: { email: 'o@x.co', role: 'owner' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    expect(nav().getByRole('link', { name: 'Dashboard' }).getAttribute('href')).toBe('/dashboard');
+  });
+  it('owner nav shows an Enquiries link with the unread number; visitors see none', async () => {
+    useAuth.mockReturnValue({ user: { email: 'o@x.co', role: 'owner' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    const link = await nav().findByRole('link', { name: /Enquiries/ });
+    expect(link.getAttribute('href')).toBe('/dashboard/enquiries');
+    expect(link.textContent).toMatch(/2\s*unread/);
+    cleanup();
+    useAuth.mockReturnValue({ user: { email: 'v@x.co', role: 'visitor' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    expect(nav().queryByRole('link', { name: /Enquiries/ })).toBeNull();
   });
 });

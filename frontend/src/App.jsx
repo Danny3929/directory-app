@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router';
+import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
 import SearchPage from './pages/SearchPage.jsx';
 import DetailPage from './pages/DetailPage.jsx';
 import FavouritesPage from './pages/FavouritesPage.jsx';
+import AuthPage from './pages/AuthPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import GymFormPage from './pages/GymFormPage.jsx';
+import EnquiriesPage from './pages/EnquiriesPage.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import { useAuth } from './AuthContext.jsx';
+import { useUnread } from './lib/unread.js';
 import { loadFavourites, saveFavourites, toggleFavourite } from './lib/favourites.js';
 import './App.css';
 
@@ -33,14 +40,57 @@ export default function App() {
           Find a gym
         </NavLink>
         <NavLink to="/favourites">Saved gyms ({favourites.length})</NavLink>
+        <AccountLinks />
       </nav>
       <Routes>
         <Route path="/" element={<SearchPage favourites={favourites} onToggleFavourite={toggle} />} />
         <Route path="/listing/:slug" element={<DetailRoute favourites={favourites} onToggleFavourite={toggle} />} />
         <Route path="/favourites" element={<FavouritesPage favourites={favourites} onToggleFavourite={toggle} />} />
+        <Route path="/login" element={<AuthPage mode="login" />} />
+        <Route path="/register" element={<AuthPage mode="register" />} />
+        <Route path="/dashboard" element={<ProtectedRoute role="owner"><DashboardPage /></ProtectedRoute>} />
+        <Route path="/dashboard/enquiries" element={<ProtectedRoute role="owner"><EnquiriesPage /></ProtectedRoute>} />
+        <Route path="/dashboard/new" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
+        <Route path="/dashboard/:id/edit" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
+  );
+}
+
+// The right-hand part of the nav. While we are still asking the server who is
+// logged in, show nothing, so a logged-in person never sees a flash of "Log in".
+// Owners also get a Dashboard link.
+function AccountLinks() {
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const unread = useUnread(user?.role === 'owner', pathname);
+  if (loading) return null;
+  if (!user) {
+    return (
+      <span className="nav-account">
+        <NavLink to="/login">Log in</NavLink>
+        <NavLink to="/register">Register</NavLink>
+      </span>
+    );
+  }
+  const leave = async () => {
+    await logout().catch(() => {}); // the context forgets the user even if the call fails
+    navigate('/');
+  };
+  return (
+    <span className="nav-account">
+      {user.role === 'owner' && <NavLink to="/dashboard" end>Dashboard</NavLink>}
+      {user.role === 'owner' && (
+        <NavLink to="/dashboard/enquiries">
+          Enquiries
+          {unread > 0 && <span className="badge">{unread}<span className="sr-only"> unread</span></span>}
+        </NavLink>
+      )}
+      <span className="nav-user">{user.email}</span>
+      <button type="button" onClick={leave}>Log out</button>
+    </span>
   );
 }
 

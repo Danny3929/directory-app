@@ -6,9 +6,11 @@ nothing private is ever written in this file. For local work, copy
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
+from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,6 +72,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "listings",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -127,21 +130,30 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Owner-uploaded photos. In Task 5 these move to real storage (a server disk is wiped on deploy).
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Only the React app's own addresses may call the API from a browser.
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
+# Django's CSRF check also compares the Origin header with the API's own host. The
+# React app lives on another address, so without this every logged-in POST, PATCH
+# and DELETE from a real browser fails with "Origin checking failed".
+CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 
 REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # Visitors can read listings and send an enquiry without logging in.
     # Changing data is only done in the Django admin, which needs a staff login.
+    "DEFAULT_AUTHENTICATION_CLASSES": ["accounts.authentication.CookieJWTAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
     "EXCEPTION_HANDLER": "listings.errors.api_exception_handler",
     # Only the enquiry endpoint uses this scope. Counted per visitor IP in the cache.
     # Behind a proxy (Task 5) set NUM_PROXIES, or every visitor looks like the proxy.
-    "DEFAULT_THROTTLE_RATES": {"enquiry": "5/hour"},
+    "DEFAULT_THROTTLE_RATES": {"enquiry": "5/hour", "login": "10/hour"},
 }
 
 # When DEBUG is off (a real server), cookies are only sent over HTTPS.
@@ -149,6 +161,15 @@ REST_FRAMEWORK = {
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+# Tokens live in httpOnly cookies (see accounts/authentication.py).
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+}
+# The browser may send the cookie to the exact origin above, never to "*".
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [*default_headers, "x-csrftoken"]
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Gym Directory API",

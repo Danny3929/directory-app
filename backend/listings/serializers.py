@@ -10,9 +10,22 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class ListingImageSerializer(serializers.ModelSerializer):
+    # Only set for owner uploads; seeded photos use "image" (a file name) as before.
+    url = serializers.SerializerMethodField()
+
     class Meta:
         model = ListingImage
-        fields = ["image", "alt_text"]
+        fields = ["image", "alt_text", "url"]
+
+    def get_url(self, obj):
+        return obj.file.url if obj.file else None
+
+
+class OwnerImageSerializer(ListingImageSerializer):
+    """Same, plus the id an owner needs to remove a photo."""
+
+    class Meta(ListingImageSerializer.Meta):
+        fields = ["id", *ListingImageSerializer.Meta.fields]
 
 
 class ListingSerializer(serializers.ModelSerializer):
@@ -81,3 +94,48 @@ class EnquirySerializer(serializers.ModelSerializer):
     class Meta:
         model = Enquiry
         fields = ["name", "email", "message"]
+
+
+class OwnerEnquirySerializer(serializers.ModelSerializer):
+    """An enquiry as its gym's owner sees it. Everything is read-only: the only
+    change an owner can make is marking it read, through the view's "read" action."""
+    listing_id = serializers.IntegerField(read_only=True)
+    listing_name = serializers.CharField(source="listing.name", read_only=True)
+
+    class Meta:
+        model = Enquiry
+        fields = ["id", "listing_id", "listing_name", "name", "email", "message", "is_read", "created_at"]
+        read_only_fields = fields
+
+
+class OwnerListingSerializer(serializers.ModelSerializer):
+    """What an owner sees and may change on their own gym.
+
+    Writable: the gym's details and tags. Never read from the client: owner,
+    is_published, featured_until, slug, images. The view sets owner from the login."""
+    tags = serializers.SlugRelatedField(
+        many=True, slug_field="slug", queryset=Tag.objects.all(), required=False,
+    )
+    images = OwnerImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Listing
+        fields = [
+            "id", "slug", "name", "description", "address", "area", "city", "zip_code",
+            "latitude", "longitude", "price_min", "price_max", "tags", "images",
+            "is_published", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "slug", "images", "is_published", "created_at", "updated_at"]
+        extra_kwargs = {
+            "latitude": {"min_value": -90, "max_value": 90},
+            "longitude": {"min_value": -180, "max_value": 180},
+            "price_min": {"max_value": 10_000_000},
+            "price_max": {"max_value": 10_000_000},
+        }
+
+    def validate(self, data):
+        low = data.get("price_min", getattr(self.instance, "price_min", None))
+        high = data.get("price_max", getattr(self.instance, "price_max", None))
+        if low is not None and high is not None and low > high:
+            raise serializers.ValidationError({"price_min": ["Minimum price cannot be above the maximum."]})
+        return data

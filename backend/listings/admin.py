@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 
 from .models import Enquiry, Listing, ListingImage, Tag
 
@@ -13,7 +13,7 @@ class ListingImageInline(admin.TabularInline):
     """Lets staff add and order a gym's photos on the gym's own page."""
     model = ListingImage
     extra = 1
-    fields = ["image", "alt_text", "position"]
+    fields = ["image", "file", "alt_text", "position"]
 
 
 @admin.register(Listing)
@@ -27,6 +27,13 @@ class ListingAdmin(admin.ModelAdmin):
     inlines = [ListingImageInline]
     # Loads each owner in the same query, instead of one query per row.
     list_select_related = ["owner"]
+    actions = ["approve_selected"]
+
+    @admin.action(description="Approve selected listings", permissions=["change"])
+    def approve_selected(self, request, queryset):
+        # One UPDATE for all rows; only unpublished ones, so the count is honest.
+        count = queryset.filter(is_published=False).update(is_published=True)
+        self.message_user(request, f"{count} listing(s) approved and now public.", messages.SUCCESS)
 
 
 @admin.register(Enquiry)

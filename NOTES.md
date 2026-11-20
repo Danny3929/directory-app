@@ -13,6 +13,8 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 
 - 2026-11-15: Data fields renamed to the guide's names (`priceKsh` → `priceMin`/`priceMax`, `featured` → `isFeatured`) and `slug`, `zip`, `photos` added. `zip` comes from the gym's area (Kilimani 00619, Kileleshwa 00605, Lavington 00603, Westlands 00800, Upper Hill 00202). `priceMax` is invented: the starting price plus Ksh 1,000 to 3,000 for the top plan. `photos` lists the gym's tag photos, most popular tag first, with the classes photo if none. "Cheapest first" sorts by `priceMin`.
 
+- 2026-11-20 (Task 4 step 1): Token storage is an **httpOnly cookie**. Dan's words: "I would pick the httpOnly cookie because it keeps the token hidden from JavaScript, which seems much safer if an injection bug ever gets into the app. Even though localStorage sounds easier to use and stays around after a refresh, letting any script read the token feels risky while I'm still learning how to lock down security. Setting up CSRF defense and CORS takes a bit more effort up front, but I'd rather handle that extra setup than risk having a token stolen." AI's additions: (1) the cookie stops an injected script from *stealing* the token, but that script can still send requests as the user while the page is open, so XSS still has to be prevented; (2) CSRF defence is `SameSite=Lax` on the cookie plus Django's CSRF token on POST/PATCH/DELETE; (3) the frontend sends `credentials: 'include'` and Django needs `CORS_ALLOW_CREDENTIALS=True` with the exact origin, never `*`; (4) in dev, localhost:5173 and localhost:8000 count as the same *site* (ports are ignored), so Lax cookies work; on Vercel plus a separate API domain they are cross-site and browsers block them, so Task 5 should proxy `/api` through Vercel to keep one site. Packages checked 2026-11-20: simplejwt 5.5.1 (repo active, PyPI lists Django up to 5.2, token create/verify tested on Django 6.1.3), Pillow 13.0.0.
+
 ## Things the AI got wrong
 - 2026-11-15: Said Task 2 only needed a README and Vercel. Checking against the guide showed radius, tag and price filters, debounce, 12 per page, `/listing/:slug` with React Router, gallery, similar listings, enquiry form, Favourites page and `vercel.json` were all missing. The AI had also suggested `#/gym/N` addresses instead of the React Router the guide asks for. Rule: check every guide requirement before calling a task nearly done.
 
@@ -46,7 +48,7 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - `?saved=1` lives in the address like `?q=` and `?zip=`, so Back from a detail page returns to the Saved view.
 - Keyboard checked in a real Chrome (driven through its debugging port): Tab order is search, ZIP, sort, Saved only, then each card's name link and heart. Space and Enter both toggle the heart, and `localStorage` follows (`[8]` then `[]`).
 - Layout checked at a true 390px width: no sideways scroll on the saved view or the detail page.
-- Not tested: a screen reader (only the roles and `aria-pressed` are tested), a real phone, and the gym-gone card on screen (only in tests).
+- Narrator was run on the search form and tags on 2026-11-20 (clear, pacing slightly off, per Dan); cards, detail and saved pages are not covered. Not tested otherwise: a screen reader (only the roles and `aria-pressed` are tested), a real phone, and the gym-gone card on screen (only in tests).
 - Tooling slip: headless Chrome `--window-size=390` crops the picture because Chrome has a minimum window width. Use device emulation instead.
 
 ## Slice notes: gym photos (2026-11-15)
@@ -168,3 +170,67 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Flaky test: `npm test` failed 1 of 263 once, then passed 4 runs in a row. I did not catch which test. Probably the known "load more" timing problem; needs a look.
 - Task 3 Explain-it answers are left for Dan to write in his own words (README questions 5 to 8).
 - Explain-it 5 to 8: Dan answered by multiple-choice cards (Joy allowed this for the README) and picked the recommended answer each time; written into the README.
+
+## Slice notes: register endpoint, Task 4 step 2 (2026-11-20)
+- New app `accounts`: `Profile` (one per user, role `visitor` or `owner`) and `POST /api/v1/auth/register/` taking only `email`, `password`, `role`. Staff is Django's `is_staff`, never a role a user can pick.
+- Email is trimmed and lower-cased, and doubles as the username, so the database's unique username also guards against two sign-ups racing each other (that case is a 400, not a 500; tested by faking the race).
+- Passwords go through Django's 4 validators (length, common, numeric, too like the email). `write_only`, so never sent back; the test checks the log too.
+- Proof the tests can fail: switching off `validate_password` made 4 tests fail.
+- Real-server check found a 500 that was my fault, not the code's: a test server I thought I had stopped was still on port 8031, using the dev database without the new table. Rule: after stopping a server, check the port is free before trusting a new run.
+- Known trade-off: "An account with this email already exists" tells a stranger that email is registered. The guide asks for a unique email, so the message stays; step 3's throttling slows anyone trying many emails.
+- Run `python manage.py migrate` once on your dev database to get the new table.
+
+## Slice notes: login, refresh, me, Task 4 step 3 (2026-11-20)
+- Tokens are set by the server as httpOnly cookies (`gym_access` 15 min, `gym_refresh` 7 days, SameSite=Lax, Secure when DEBUG is off). The login body returns only id, email and role, never a token. The refresh cookie is only sent to `/api/v1/auth/`.
+- CSRF: login also sets the readable `csrftoken` cookie. Every POST/PUT/PATCH/DELETE made with a login cookie must send it back as `X-CSRFToken`, otherwise 403. `/auth/refresh/` and `/auth/logout/` need it too.
+- An expired or forged access cookie counts as logged out, so public pages keep working; protected ones give 401 and the app then calls refresh.
+- Wrong password and unknown email give the same 401 message. Login is limited to 10 tries an hour per IP (needs `NUM_PROXIES` behind a proxy in Task 5).
+- Added `/auth/logout/`, not in the plan text: JavaScript cannot delete an httpOnly cookie, so the server must. Trade-off: without a blacklist, a stolen refresh token stays valid until it expires (7 days).
+- Mistake of mine: my throttle first used `ScopedRateThrottle` with a class attribute; the 11th try still got 401. The throttle test caught it. Fixed with a plain per-IP throttle.
+- Proof the tests can fail: removing the CSRF rejection made 2 tests fail.
+
+## Slice notes: owner listings API, Task 4 step 4 (2026-11-20)
+- `/api/v1/me/listings/` (list, create) and `/me/listings/{id}/` (read, edit, delete). Two locks: `IsOwnerRole` (visitors get 403) and a queryset that holds only the asker's gyms, so another owner's id is a 404 and does not reveal the gym exists. `IsListingOwner` is a third check on the object itself.
+- Owner comes from the login; `is_published`, `owner`, `featured_until`, `slug` are ignored if sent. New gyms start unpublished.
+- Price order, latitude and longitude ranges are checked in the serializer, so bad input is a 400 (the database constraint would otherwise be a 500). Also on partial edits.
+- Deleting a gym that has enquiries gives 409 `has_enquiries` (PROTECT) instead of a crash. Owners cannot publish or unpublish yet; the dashboard will suggest "unpublish instead" in step 12, which needs an owner-only unpublish action (decide in step 8).
+- Known trade-off: editing a gym that is already published goes live at once, with no re-approval.
+- Proof the tests can fail: listing all gyms in the queryset and letting the client set `is_published` made 4 tests fail.
+
+## Slice notes: enquiries inbox, Task 4 step 8 (2026-11-20)
+- `/me/enquiries/` lists messages to the asker's own gyms (queryset filtered by `listing__owner`), so another owner's enquiry is a 404. Read-only plus `POST .../read/`; PATCH and DELETE give 405, so an owner cannot rewrite a visitor's message. The list uses `select_related`, so the gym name is not one query per row (a test caps the query count).
+- Deleting a gym that has enquiries stays blocked (409, PROTECT): no visitor message is lost. Trade-off: an owner cannot clear out a gym with old enquiries. An owner-only "unpublish" action is still not built; step 12 needs it or the dashboard can only say "ask an admin".
+- Proof the tests can fail: dropping the owner filter made 2 tests fail; counting everyone's unread messages made 1 fail.
+
+## Slice notes: CORS check, Task 4 step 9 (2026-11-20)
+- Allowed origins come from `CORS_ALLOWED_ORIGINS`; credentials are allowed only for those exact origins. `test_cors.py` sends a preflight from a listed and an unlisted origin. Proof it can fail: switching on the allow-every-origin setting made 3 of 4 tests fail (switched back).
+- Trade-off, uploads: two photo uploads sent at the same instant can both see "4 photos" and both pass, giving 6. SQLite cannot lock the row. Fix when on PostgreSQL: `select_for_update()` on the gym inside the transaction, or a unique (gym, position) constraint. Not fixed now because the damage is one extra photo for the owner's own gym.
+- Trade-off, files: uploads sit on the server's disk, which a real host wipes on deploy. Task 5 needs object storage (or a persistent disk).
+
+## Task 4, step 5: owner A vs owner B bypass tests
+Dan was past the deadline and had no time to name the bypasses, so Moss chose them (`backend/listings/tests/test_owner_bypass.py`):
+1. Owner B puts A's gym id in the URL and tries GET, PUT, PATCH, DELETE: all 404, and the gym is unchanged.
+2. Query-string and body tricks (`?owner=`, `?is_published=`, `owner` in the body): the list never widens, and a client-sent `owner` is ignored.
+3. Visitors, anonymous users and the public gym URL: 403 / 401 / read-only.
+Proof they can fail: with the queryset loosened to all gyms, 5 tests failed; with the object permission also set to always-true, the same 5 failed. Both restored; 139 backend tests pass.
+Lesson: bypass 3 stays green in that experiment because it depends on `IsOwnerRole`, a different lock. The queryset filter is the lock that really stops owner B; `IsListingOwner` is the backup, and no test alone isolates it yet.
+
+## Task 4, step 14: browser check on a throwaway database (2026-11-20)
+Two owners in two separate Chrome profiles (real cookies), backend on port 8020 with its own database, frontend on 5180.
+- **Bug the unit tests missed:** the first gym save from a real browser failed with "CSRF check failed". Django also compares the `Origin` header with the API's own host, and the React app is on another address. The tests were same-origin. Fix: `CSRF_TRUSTED_ORIGINS` follows `CORS_ALLOWED_ORIGINS` (`63fd069`). Proof the new test can fail: with the line removed it failed. Cause of the miss: tests use Django's test client, which sends no Origin.
+- Owner B against A's gym, with a valid CSRF token: GET, PATCH, DELETE and photo upload all 404. B's own create ignored `owner` and `is_published` (gym saved as unpublished, owned by B). Note: a raw `fetch` without the CSRF header gives 403 for the wrong reason; always send the header when testing ownership.
+- Uploads: the 4 MB PNG is refused in the browser before sending ("larger than 2 MB"). Sent straight to the API, a 5 MB file gets 413, and random bytes or an .exe named .jpg get 400 "not a valid image". A real 300x200 JPEG uploaded and displayed.
+- Dialogs: the delete dialog opens as a real modal with focus on Cancel, and Escape closes it without deleting.
+- Enquiries: a visitor message with `<b>` and `<script>` shows as plain text. The nav badge read "2 unread", then "1 unread" after Mark as read. Deleting a gym that has enquiries shows "This gym has enquiries, so it cannot be deleted." and the gym stays.
+- Accessibility (automated DOM checks at 390px, not a screen reader): every field has a label, one h1 per page, page titles set, no sideways scroll, empty submit shows 9 errors and moves focus to the first. Small things: the "Add a gym" and "Enquiries inbox" links are 21px tall (WCAG 2.2 asks 24px for stand-alone links).
+- Not covered: Narrator/NVDA listening, Tab order inside the photo uploader, the admin approve button in a browser. Photos only display when the debug switch is on; with it off the server does not serve `/media/`, a Task 5 item with the file-storage one.
+
+## Task 4 Explain-it (step 14)
+These are the three questions in the guide's Task 4 section (Moss first wrote different ones by mistake; fixed 2026-11-20). Answers must be Dan's own words; Moss does not write them for him.
+Dan answered on 2026-11-20 (quiz in chat). Moss's corrections are marked **Fix**.
+1. **Authentication vs authorization.** Dan: authentication proves who you are (login); authorization checks what you may do (owner or `IsAuthenticated` checks). **Fix:** the code is not middleware. Authentication is the DRF class `CookieJWTAuthentication` in `accounts/authentication.py`, which reads the `gym_access` cookie. Authorization is `IsListingOwner` in `listings/permissions.py`; the queryset filter on `/me/listings/` is the main lock and the permission is the backup.
+2. **Silent refresh, two failing requests.** Dan: on a 401 the app calls `/refresh` with the refresh cookie, then retries; two requests share one refresh promise. **Fix:** there is no Axios, it is our own fetch wrapper in `frontend/src/api/client.js`. We do not rotate refresh tokens (`SIMPLE_JWT` sets only the two lifetimes), so a second refresh would not log anyone out. The shared promise (`refreshing`) saves a second `/refresh` call and stops a double logout when the refresh fails. Dan first said "not sure" about the step by step; Moss walked through it. Dan's follow-up said B waits so only one new cookie is asked for, which is right; his reason about the server cancelling the second call applies only to rotating tokens.
+3. **httpOnly cookie: defends and leaves open.** Dan: it stops script theft of the token (XSS reading `document.cookie`); it leaves CSRF (cookies sent automatically) unless SameSite or CSRF tokens are used, and a script on the page can still make requests. Correct; we use SameSite=Lax plus Django's CSRF check.
+4. **Why login skips the 8-character rule.** Dan: register sets a new password so it enforces the rule; login only compares with the stored hash, and a rule would lock out older accounts. Correct.
+Still unwritten: why the first real-browser save failed when 169 tests passed (answer in the step 14 section: tests send no `Origin` header).
+- 2026-11-20: Dashboard links "Add a gym" and "Enquiries inbox" were 21px tall (WCAG 2.2 wants 24px). Cause: inline links ignore `min-height`. Fix: `.dash-links a` is `inline-block` with the 44px `--target-size`. Dev database migrated (accounts 0001, listings 0002).

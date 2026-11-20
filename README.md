@@ -114,6 +114,36 @@ Django 6, Django REST Framework, django-filter, django-cors-headers, drf-spectac
 | `GET /health/` | `{"status": "ok"}` |
 | `GET /schema/`, `GET /docs/` | OpenAPI file and Swagger page |
 
+**Accounts and owner endpoints (Task 4)**
+
+Login puts two httpOnly cookies on the browser (`gym_access`, 15 minutes; `gym_refresh`, 7 days). Anything that changes data must also send the `X-CSRFToken` header.
+
+| Method and path | Who | What it does |
+|---|---|---|
+| `POST /auth/register/` | anyone | email, password, role (`visitor` or `owner`); `is_staff` is ignored |
+| `POST /auth/login/` | anyone | sets the cookies; 10 tries an hour per IP; same 401 for a wrong password and an unknown email |
+| `POST /auth/refresh/` | logged in | new access cookie from the refresh cookie |
+| `POST /auth/logout/` | anyone | clears both cookies |
+| `GET /auth/me/` | logged in | who am I, and my role |
+| `GET, POST /me/listings/` | owners | my gyms; new gyms start unpublished until an admin approves them |
+| `GET, PUT, PATCH, DELETE /me/listings/{id}/` | owners | another owner's gym is a 404; a gym with enquiries cannot be deleted (409 `has_enquiries`) |
+| `POST /me/listings/{id}/images/` | owners | one photo: JPEG, PNG or WebP, 2 MB, checked by content, at most 5 per gym |
+| `DELETE /me/listings/{id}/images/{image_id}/` | owners | removes the photo and its file |
+| `GET /me/enquiries/` | owners | messages to my gyms, newest first; `?unread=1` for unread only |
+| `GET /me/enquiries/{id}/` | owners | one message; another owner's is a 404 |
+| `POST /me/enquiries/{id}/read/` | owners | marks it read |
+| `GET /me/enquiries/unread-count/` | owners | `{"unread": N}` |
+
+**CORS:** only the addresses in `CORS_ALLOWED_ORIGINS` may call the API from a browser, and they may send cookies. There is no `*`. Four tests send a real preflight from an allowed and an unlisted origin; switching on the allow-every-origin setting made 3 of them fail.
+
+**Where the login token lives: httpOnly cookies, not localStorage (trade-off)**
+- **Choice:** the access token (15 minutes) and refresh token (7 days) are in httpOnly cookies. The React code never sees them and the login response body holds no token.
+- **Why:** if an attacker gets a script onto the page (XSS), it can read anything in `localStorage` and send it away. It cannot read an httpOnly cookie.
+- **Cost:** browsers attach cookies by themselves, so another site could try to make the browser send a request (CSRF). We answer with `SameSite=Lax`, a CSRF header that every change must carry, and an exact list of allowed origins (`CORS_ALLOWED_ORIGINS`, mirrored in `CSRF_TRUSTED_ORIGINS`).
+- **What still hurts:** an XSS script can still make requests as the logged-in owner while the page is open. It just cannot steal the token and use it later.
+- **Also needed:** the API and the site must share a site for `SameSite=Lax` cookies to travel, and production needs HTTPS (`Secure` cookies). That is a Task 5 job.
+- **Found by testing:** the first real-browser save failed on the CSRF origin check, which the 169 same-origin tests never exercised.
+
 Only published gyms are shown. Hidden gyms give 404. Every error has the same shape, `{"error": {"code", "message", "fields"}}`, and no stack trace reaches the visitor. The distance and featured rules live in `listings/services.py`, not in the views.
 
 **Settings (environment variables)**
@@ -201,7 +231,8 @@ In real Chrome, at phone width (390 px) and on desktop, and on a real Android ph
 - **Reload and shared links:** 11 different addresses (filters, `?page=3`, a broken page number, Min above Max, an unknown ZIP, no results, a load error, a missing gym, a missing page) each looked the same after a reload. None of them scrolled sideways.
 - **Live site:** the home page, `?q=yoga`, `?zip=abc` and a photo file all return 200 on https://directory-app-two.vercel.app (checked 2026-11-20 by request only; the look was not re-checked on a screen).
 - **Screen reader data (2026-11-20):** I printed the accessibility tree Chrome gives a screen reader for the search, gym and saved pages (a small script kept outside this repo). Every box has a label, filter and save buttons say on or off, the result count is announced politely, photos have descriptions, and the enquiry form is a named region. One problem, since fixed: on the search page the headings jumped from level 1 to level 3; they now go 1, 2, and 3 under Similar gyms.
-- **Not checked yet:** listening to a real screen reader (NVDA or Narrator) speak the pages. The tree shows what it is given, not how it sounds.
+- **Narrator check (2026-11-20, partly done):** Windows Narrator read the search page in Chrome while I recorded it and transcribed the recording. It announced every label, the control types (edit, combo box, toggle button) and the tag counts. Dan listened and found the pacing slightly off but clear. Covered only the search form and tags (first 14 Tab stops). A transcript can miss words: "Within" and "Beginner" did not appear in it, so that is unconfirmed.
+- **Not checked yet:** Narrator or NVDA on the gym cards, save buttons, gym detail page and saved page.
 
 ## Accessibility problems found and fixed
 

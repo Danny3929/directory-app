@@ -1,19 +1,24 @@
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count, Q
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from django.db.models import ProtectedError
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
 from . import services
-from .models import Enquiry, Listing, Tag
+from .permissions import IsListingOwner, IsOwnerRole
+from .models import Enquiry, Listing, ListingImage, Tag
+from .uploads import MAX_BYTES, MAX_PER_GYM, UploadError, check_and_rename
 from .serializers import (
-    EnquirySerializer, ListingSerializer, SearchParamsSerializer, TagCountSerializer,
+    EnquirySerializer, ListingSerializer, OwnerEnquirySerializer, OwnerImageSerializer, OwnerListingSerializer, SearchParamsSerializer, TagCountSerializer,
 )
 
 
@@ -89,6 +94,103 @@ class ListingViewSet(viewsets.ReadOnlyModelViewSet):
             {"id": enquiry.pk, "message": f"Thanks, your message was sent to {gym.name}."},
             status=status.HTTP_201_CREATED,
         )
+
+
+class MyListingViewSet(viewsets.ModelViewSet):
+    """An owner's own gyms: list, create, read, edit, delete.
+
+    The queryset is only this owner's gyms, so another owner's id is a 404, not
+    a hint that it exists. New gyms start unpublished until an admin approves."""
+    serializer_class = OwnerListingSerializer
+    pagination_class = ListingPagination
+    permission_classes = [IsOwnerRole, IsListingOwner]
+    filter_backends = []
+
+    def get_queryset(self):
+        return (
+            Listing.objects.filter(owner=self.request.user)
+            .prefetch_related("tags", "images").order_by("-created_at", "-id")
+        )
+
+    def perform_create(self, serializer):
+        # Server-owned fields come from the login and the rules, never the request.
+        serializer.save(owner=self.request.user, is_published=False)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(
+                {"error": {"code": "has_enquiries", "message": "This gym has enquiries, so it cannot be deleted."}},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+    @action(detail=True, methods=["post"], url_path="images", parser_classes=[MultiPartParser, FormParser])
+    def add_image(self, request, pk=None):
+        """Upload one photo (form field "file", optional "alt_text") to one of my gyms."""
+        gym = self.get_object()  # 404 for another owner's gym
+        # Refuse a huge upload from its header, before reading all of it.
+        if int(request.META.get("CONTENT_LENGTH") or 0) > MAX_BYTES + 100_000:
+            return self._upload_error("too_large", "The photo is larger than 2 MB.", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        upload = request.FILES.get("file")
+        if upload is None:
+            return self._upload_error("no_file", "Choose a photo to upload.")
+        try:
+            safe_file = check_and_rename(upload)
+        except UploadError as exc:
+            return self._upload_error("bad_image", exc.message)
+        alt = request.data.get("alt_text", "")[:200]
+        with transaction.atomic():
+            count = gym.images.count()
+            if count >= MAX_PER_GYM:
+                return self._upload_error("too_many", f"A gym can have at most {MAX_PER_GYM} photos.")
+            image = ListingImage.objects.create(listing=gym, file=safe_file, alt_text=alt, position=count)
+        return Response(OwnerImageSerializer(image).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["delete"], url_path=r"images/(?P<image_id>\d+)")
+    def remove_image(self, request, pk=None, image_id=None):
+        """Remove one of my gym's photos (seeded or uploaded). The file goes with it."""
+        gym = self.get_object()
+        get_object_or_404(gym.images, pk=image_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def _upload_error(code, message, http=status.HTTP_400_BAD_REQUEST):
+        return Response({"error": {"code": code, "message": message}}, status=http)
+
+
+class MyEnquiryViewSet(viewsets.ReadOnlyModelViewSet):
+    """Messages sent to the logged-in owner's gyms. Nobody else's: the queryset is
+    filtered by owner, so another owner's enquiry id is a 404.
+
+    ?unread=1 lists only unread ones. POST .../{id}/read/ marks one read."""
+    serializer_class = OwnerEnquirySerializer
+    pagination_class = ListingPagination
+    permission_classes = [IsOwnerRole]
+    filter_backends = []
+
+    def get_queryset(self):
+        # select_related: the gym name comes in the same query, not one per row.
+        qs = Enquiry.objects.filter(listing__owner=self.request.user).select_related("listing")
+        if self.request.query_params.get("unread") in ("1", "true"):
+            qs = qs.filter(is_read=False)
+        return qs.order_by("-created_at", "-id")
+
+    @extend_schema(request=None, responses={200: OwnerEnquirySerializer})
+    @action(detail=True, methods=["post"], url_path="read")
+    def read(self, request, pk=None):
+        enquiry = self.get_object()
+        if not enquiry.is_read:
+            enquiry.is_read = True
+            enquiry.save(update_fields=["is_read"])
+        return Response(self.get_serializer(enquiry).data)
+
+    @extend_schema(responses={200: OpenApiTypes.OBJECT})
+    @action(detail=False, methods=["get"], url_path="unread-count", pagination_class=None)
+    def unread_count(self, request):
+        # Counts all of this owner's unread messages, whatever the ?unread filter says.
+        count = Enquiry.objects.filter(listing__owner=request.user, is_read=False).count()
+        return Response({"unread": count})
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
