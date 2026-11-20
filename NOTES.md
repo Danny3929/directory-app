@@ -255,3 +255,10 @@ Still unwritten: why the first real-browser save failed when 169 tests passed (a
 - `NUM_PROXIES` comes from the environment; the right number is checked on Render in step 11.
 - A live Stripe key (`sk_live_`) stops the server starting. Proof: with the check removed, its test failed.
 - `manage.py check --deploy`: 25 warnings down to 1. 24 were the Swagger docs generator (no description of the cookie login, owner views failing without a user, function views without a serializer); fixed with `accounts/schema.py`, `@extend_schema` and a `swagger_fake_view` guard. Left on purpose: **W021 HSTS preload**. Preload is a permanent browser list for a domain we own; `onrender.com` belongs to Render.
+
+## Task 5, step 14: CI (2026-11-20)
+- `.github/workflows/ci.yml`: backend job (migration check, pytest) and frontend job (`npm ci`, lint, tests, build) on every pull request, on `main` and on `task-*` pushes. No secrets; Stripe is faked in tests.
+- AI got wrong: first used `actions/checkout@v4` etc. from memory; the current major is v7 (checked on GitHub).
+- First CI run: the frontend job failed at `npm ci` (backend passed). Cause: `package-lock.json` was made on Windows and lacked `@emnapi/core` and `@emnapi/runtime`, which Linux needs; `npm ci` on Windows was fine, so only a real Linux run showed it. Found by temporarily copying npm's own error into the run's annotations (a log needs a login). Fix: regenerated the lockfile (small version bumps inside the allowed ranges); lint, 360 tests and build pass; CI green.
+- One frontend test failed once locally and passed on rerun: the known flaky one, still not fixed.
+- The README badge shows the status of `main`, so it only turns green after this branch is merged.
