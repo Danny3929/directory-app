@@ -6,6 +6,7 @@ import { ApiError } from '../api/listings.js';
 
 vi.mock('../api/owner.js', () => ({
   createMyGym: vi.fn(), updateMyGym: vi.fn(), getMyGym: vi.fn(), listTags: vi.fn(),
+  uploadGymPhoto: vi.fn(), removeGymPhoto: vi.fn(),
 }));
 import { createMyGym, getMyGym, listTags, updateMyGym } from '../api/owner.js';
 import GymFormPage from './GymFormPage.jsx';
@@ -105,5 +106,18 @@ describe('GymFormPage', () => {
     getMyGym.mockRejectedValue(new ApiError('Not found.', { status: 404 }));
     mount('/dashboard/99/edit');
     expect((await screen.findByRole('alert')).textContent).toMatch(/not found/i);
+  });
+  it('edit shows the photos of the gym; create says to save first', async () => {
+    getMyGym.mockResolvedValue({
+      id: 4, name: 'Acacia Yoga', description: 'Calm', address: '2 Rd', area: '', city: 'Nairobi',
+      zip_code: '00200', latitude: -1.3, longitude: 36.8, price_min: 2000, price_max: 4000, tags: [],
+      images: [{ id: 1, image: 'yoga.webp', url: null, alt_text: 'A calm studio' }],
+    });
+    mount('/dashboard/4/edit');
+    expect(await screen.findByAltText('A calm studio')).toBeTruthy();
+    cleanup();
+    mount('/dashboard/new');
+    expect(await screen.findByText(/Save the gym first/)).toBeTruthy();
+    expect(screen.queryByLabelText(/Add a photo/)).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { createMyGym, getMyGym, listTags, updateMyGym } from '../api/owner.js';
+import PhotoManager from '../components/PhotoManager.jsx';
 import { EMPTY_GYM, fromGym, gymErrors, toPayload } from '../lib/gymForm.js';
 
 // Create (/dashboard/new) and edit (/dashboard/:id/edit) share this form.
@@ -24,6 +25,7 @@ export default function GymFormPage() {
   const [load, setLoad] = useState({ status: editing ? 'loading' : 'ready', error: '' });
   const [tags, setTags] = useState([]);
   const [values, setValues] = useState(EMPTY_GYM);
+  const [photos, setPhotos] = useState([]); // the gym's photos at load time (edit only)
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState(null); // { fields, message }
@@ -34,7 +36,7 @@ export default function GymFormPage() {
     listTags().then((list) => !cancelled && setTags(list)).catch(() => {}); // no tag list: the form still works
     if (editing) {
       getMyGym(id)
-        .then((gym) => { if (!cancelled) { setValues(fromGym(gym)); setLoad({ status: 'ready', error: '' }); } })
+        .then((gym) => { if (!cancelled) { setValues(fromGym(gym)); setPhotos(gym.images ?? []); setLoad({ status: 'ready', error: '' }); } })
         .catch((err) => !cancelled && setLoad({ status: 'error', error: err.status === 404 ? 'That gym was not found.' : err.message }));
     }
     return () => { cancelled = true; };
@@ -154,6 +156,8 @@ export default function GymFormPage() {
         )}
         <button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save gym'}</button>
       </form>
+      {/* Photos are separate from the form: they upload on their own, and need the gym to exist. */}
+      {editing ? <PhotoManager gymId={id} initial={photos} /> : <p>Save the gym first, then edit it to add photos.</p>}
     </main>
   );
 }

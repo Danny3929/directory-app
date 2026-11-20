@@ -20,3 +20,19 @@ export const deleteMyGym = (id) => apiFetch(`/me/listings/${id}/`, { method: 'DE
 
 // The tags a gym can have (a short list, not paged).
 export const listTags = () => apiFetch('/tags/');
+
+// Photos. The file goes as multipart form data (apiFetch leaves FormData alone,
+// so the browser sets the boundary itself). Gives back the new photo { id, url, alt_text }.
+export function uploadGymPhoto(gymId, file, altText = '') {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('alt_text', altText);
+  return apiFetch(`/me/listings/${gymId}/images/`, { method: 'POST', body: form });
+}
+export const removeGymPhoto = (gymId, imageId) =>
+  apiFetch(`/me/listings/${gymId}/images/${imageId}/`, { method: 'DELETE' });
+
+// Unpaged unread count for the nav badge, and the inbox (server pages: 12 at a time).
+export const unreadCount = () => apiFetch('/me/enquiries/unread-count/').then((d) => d.unread);
+export const listEnquiries = (page = 1) => apiFetch(`/me/enquiries/?page=${page}`);
+export const markEnquiryRead = (id) => apiFetch(`/me/enquiries/${id}/read/`, { method: 'POST' });
