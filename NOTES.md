@@ -234,3 +234,16 @@ Dan answered on 2026-11-20 (quiz in chat). Moss's corrections are marked **Fix**
 4. **Why login skips the 8-character rule.** Dan: register sets a new password so it enforces the rule; login only compares with the stored hash, and a rule would lock out older accounts. Correct.
 Still unwritten: why the first real-browser save failed when 169 tests passed (answer in the step 14 section: tests send no `Origin` header).
 - 2026-11-20: Dashboard links "Add a gym" and "Enquiries inbox" were 21px tall (WCAG 2.2 wants 24px). Cause: inline links ignore `min-height`. Fix: `.dash-links a` is `inline-block` with the 44px `--target-size`. Dev database migrated (accounts 0001, listings 0002).
+
+## Task 5, steps 3 to 6: boost checkout and Stripe webhook (2026-11-20)
+- New `billing` app: `BoostPurchase` (pending until the webhook marks it paid) and `ProcessedStripeEvent` (every Stripe event id we handled, unique).
+- `POST /billing/checkout/` only searches the owner's own gyms (another owner's id is 404, Stripe never called). Price (Ksh 500) and days (30) come from settings, never the request. Unpublished gyms cannot be boosted. No Stripe key, or Stripe down, gives 503 without the internal error text. Checkout never touches `featured_until`.
+- `POST /billing/webhook/` is CSRF-exempt because Stripe cannot send our token; the signature check replaces it. Bad or old (over 5 minutes) signature: 400 and nothing saved.
+- AI got wrong at first: `stripe` 17 objects are no longer Python dicts, so `event.data.object.get(...)` crashes. Fix: `event.to_dict()` before reading it.
+- Commit hook caught a fake `whsec_...` string in a test; marked `# allow-commit-check`.
+- Proof the tests can fail (each break restored, `git diff` empty after):
+  1. Skip signature check: 2 tests failed (bad signature, old signature).
+  2. Idempotency off: the replay test failed, but only on the event count. The gym did not get extra days because a second lock (a boost already marked paid is ignored) caught it. Like Task 4: one main lock, one backup.
+  3. Metadata check off: the other-owner test failed.
+  4. Extend from today instead of the current end date: the extend test failed.
+  Checkout: removing `owner=request.user` made the other-owner test fail.
