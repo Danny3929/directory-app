@@ -44,7 +44,7 @@ export default function DashboardPage() {
     <main className="page">
       <title>My gyms | Nairobi gyms</title>
       <h1>My gyms</h1>
-      <p>
+      <p className="dash-links">
         <Link to="/dashboard/new">Add a gym</Link>
         {' · '}
         <Link to="/dashboard/enquiries">Enquiries inbox</Link>

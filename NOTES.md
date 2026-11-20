@@ -224,3 +224,10 @@ Two owners in two separate Chrome profiles (real cookies), backend on port 8020 
 - Enquiries: a visitor message with `<b>` and `<script>` shows as plain text. The nav badge read "2 unread", then "1 unread" after Mark as read. Deleting a gym that has enquiries shows "This gym has enquiries, so it cannot be deleted." and the gym stays.
 - Accessibility (automated DOM checks at 390px, not a screen reader): every field has a label, one h1 per page, page titles set, no sideways scroll, empty submit shows 9 errors and moves focus to the first. Small things: the "Add a gym" and "Enquiries inbox" links are 21px tall (WCAG 2.2 asks 24px for stand-alone links).
 - Not covered: Narrator/NVDA listening, Tab order inside the photo uploader, the admin approve button in a browser. Photos only display when the debug switch is on; with it off the server does not serve `/media/`, a Task 5 item with the file-storage one.
+
+## Task 4 Explain-it (step 14)
+Questions come from what the browser check found. Answers must be Dan's own words; Moss does not write them for him.
+1. Why does login not enforce the 8-character rule that register does? (Dan: **not yet written**)
+2. Why is the token in an httpOnly cookie, and what attack does that open instead of closing? (README trade-off section has the facts; Dan: **not yet written**)
+3. Why did the first real-browser save fail when 169 tests passed? (Facts: the tests were same-origin and never sent an `Origin` header; fixed by `CSRF_TRUSTED_ORIGINS`.) Dan: **not yet written**
+- 2026-11-20: Dashboard links "Add a gym" and "Enquiries inbox" were 21px tall (WCAG 2.2 wants 24px). Cause: inline links ignore `min-height`. Fix: `.dash-links a` is `inline-block` with the 44px `--target-size`. Dev database migrated (accounts 0001, listings 0002).

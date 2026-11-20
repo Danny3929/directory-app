@@ -643,6 +643,12 @@ textarea {
 }
 
 /* Owner dashboard */
+.dash-links a {
+  display: inline-block; /* min-height needs a box; inline links ignore it */
+  min-height: var(--target-size);
+  line-height: var(--target-size);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

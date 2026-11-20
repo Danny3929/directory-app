@@ -136,6 +136,14 @@ Login puts two httpOnly cookies on the browser (`gym_access`, 15 minutes; `gym_r
 
 **CORS:** only the addresses in `CORS_ALLOWED_ORIGINS` may call the API from a browser, and they may send cookies. There is no `*`. Four tests send a real preflight from an allowed and an unlisted origin; switching on the allow-every-origin setting made 3 of them fail.
 
+**Where the login token lives: httpOnly cookies, not localStorage (trade-off)**
+- **Choice:** the access token (15 minutes) and refresh token (7 days) are in httpOnly cookies. The React code never sees them and the login response body holds no token.
+- **Why:** if an attacker gets a script onto the page (XSS), it can read anything in `localStorage` and send it away. It cannot read an httpOnly cookie.
+- **Cost:** browsers attach cookies by themselves, so another site could try to make the browser send a request (CSRF). We answer with `SameSite=Lax`, a CSRF header that every change must carry, and an exact list of allowed origins (`CORS_ALLOWED_ORIGINS`, mirrored in `CSRF_TRUSTED_ORIGINS`).
+- **What still hurts:** an XSS script can still make requests as the logged-in owner while the page is open. It just cannot steal the token and use it later.
+- **Also needed:** the API and the site must share a site for `SameSite=Lax` cookies to travel, and production needs HTTPS (`Secure` cookies). That is a Task 5 job.
+- **Found by testing:** the first real-browser save failed on the CSRF origin check, which the 169 same-origin tests never exercised.
+
 Only published gyms are shown. Hidden gyms give 404. Every error has the same shape, `{"error": {"code", "message", "fields"}}`, and no stack trace reaches the visitor. The distance and featured rules live in `listings/services.py`, not in the views.
 
 **Settings (environment variables)**
