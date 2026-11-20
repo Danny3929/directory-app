@@ -130,6 +130,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Owner-uploaded photos. In Task 5 these move to real storage (a server disk is wiped on deploy).
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Only the React app's own addresses may call the API from a browser.

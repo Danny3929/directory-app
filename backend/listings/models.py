@@ -10,6 +10,8 @@ from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 from django.utils import timezone
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils.text import slugify
 
 
@@ -106,9 +108,10 @@ class Listing(models.Model):
 class ListingImage(models.Model):
     # Photos go when their gym goes.
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="images")
-    # A file name in the frontend's public photos folder, e.g. "classes-2.webp".
-    # Real uploads (with type, size and content checks) come in Task 4.
-    image = models.CharField(max_length=200)
+    # Seeded photos: a file name in the frontend's public photos folder, e.g. "classes-2.webp".
+    image = models.CharField(max_length=200, blank=True)
+    # Owner uploads: checked in uploads.py (type, size, content) and saved with a generated name.
+    file = models.ImageField(upload_to="listing_photos/", blank=True)
     alt_text = models.CharField(max_length=200)
     position = models.PositiveSmallIntegerField(default=0)
 
@@ -117,6 +120,13 @@ class ListingImage(models.Model):
 
     def __str__(self):
         return f"{self.listing.name} #{self.position}"
+
+
+@receiver(post_delete, sender=ListingImage)
+def delete_uploaded_file(sender, instance, **kwargs):
+    """No orphan files: when a photo row goes (also when its gym goes), so does the file."""
+    if instance.file:
+        instance.file.delete(save=False)
 
 
 class Enquiry(models.Model):

@@ -13,7 +13,7 @@ class ListingImageInline(admin.TabularInline):
     """Lets staff add and order a gym's photos on the gym's own page."""
     model = ListingImage
     extra = 1
-    fields = ["image", "alt_text", "position"]
+    fields = ["image", "file", "alt_text", "position"]
 
 
 @admin.register(Listing)
