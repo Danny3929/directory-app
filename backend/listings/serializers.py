@@ -123,9 +123,11 @@ class OwnerListingSerializer(serializers.ModelSerializer):
         fields = [
             "id", "slug", "name", "description", "address", "area", "city", "zip_code",
             "latitude", "longitude", "price_min", "price_max", "tags", "images",
-            "is_published", "created_at", "updated_at",
+            "is_published", "featured_until", "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "slug", "images", "is_published", "created_at", "updated_at"]
+        # featured_until is shown so the dashboard can say "Featured until ...",
+        # but only the Stripe webhook may change it.
+        read_only_fields = ["id", "slug", "images", "is_published", "featured_until", "created_at", "updated_at"]
         extra_kwargs = {
             "latitude": {"min_value": -90, "max_value": 90},
             "longitude": {"min_value": -180, "max_value": 180},

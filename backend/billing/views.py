@@ -73,6 +73,8 @@ class BoostPurchaseSerializer(serializers.ModelSerializer):
         fields = [
             "id", "listing", "listing_name", "amount_ksh", "days",
             "status", "created_at", "paid_at", "featured_until",
+            # The success page matches its ?session_id= against this to show "confirmed".
+            "stripe_session_id",
         ]
 
 

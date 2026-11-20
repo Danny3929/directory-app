@@ -103,6 +103,14 @@ def test_stripe_down_gives_503_without_leaking_the_error(monkeypatch):
     assert not BoostPurchase.objects.exists()
 
 
+def test_owner_cannot_feature_a_gym_by_editing_it():
+    """The free way round paying: PATCH featured_until on my own gym. It must be ignored."""
+    client, gid = owner_with_gym()
+    resp = client.patch(f"{URL}{gid}/", {"featured_until": "2999-01-01T00:00:00Z"}, format="json")
+    assert resp.status_code == 200 and resp.data["featured_until"] is None
+    assert Listing.objects.get(pk=gid).featured_until is None
+
+
 def test_history_shows_only_my_boosts():
     a, gid_a = owner_with_gym("a@example.com")
     b, gid_b = owner_with_gym("b@example.com")
