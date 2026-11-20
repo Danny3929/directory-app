@@ -18,7 +18,7 @@ from .permissions import IsListingOwner, IsOwnerRole
 from .models import Enquiry, Listing, ListingImage, Tag
 from .uploads import MAX_BYTES, MAX_PER_GYM, UploadError, check_and_rename
 from .serializers import (
-    EnquirySerializer, ListingSerializer, OwnerImageSerializer, OwnerListingSerializer, SearchParamsSerializer, TagCountSerializer,
+    EnquirySerializer, ListingSerializer, OwnerEnquirySerializer, OwnerImageSerializer, OwnerListingSerializer, SearchParamsSerializer, TagCountSerializer,
 )
 
 
@@ -157,6 +157,40 @@ class MyListingViewSet(viewsets.ModelViewSet):
     @staticmethod
     def _upload_error(code, message, http=status.HTTP_400_BAD_REQUEST):
         return Response({"error": {"code": code, "message": message}}, status=http)
+
+
+class MyEnquiryViewSet(viewsets.ReadOnlyModelViewSet):
+    """Messages sent to the logged-in owner's gyms. Nobody else's: the queryset is
+    filtered by owner, so another owner's enquiry id is a 404.
+
+    ?unread=1 lists only unread ones. POST .../{id}/read/ marks one read."""
+    serializer_class = OwnerEnquirySerializer
+    pagination_class = ListingPagination
+    permission_classes = [IsOwnerRole]
+    filter_backends = []
+
+    def get_queryset(self):
+        # select_related: the gym name comes in the same query, not one per row.
+        qs = Enquiry.objects.filter(listing__owner=self.request.user).select_related("listing")
+        if self.request.query_params.get("unread") in ("1", "true"):
+            qs = qs.filter(is_read=False)
+        return qs.order_by("-created_at", "-id")
+
+    @extend_schema(request=None, responses={200: OwnerEnquirySerializer})
+    @action(detail=True, methods=["post"], url_path="read")
+    def read(self, request, pk=None):
+        enquiry = self.get_object()
+        if not enquiry.is_read:
+            enquiry.is_read = True
+            enquiry.save(update_fields=["is_read"])
+        return Response(self.get_serializer(enquiry).data)
+
+    @extend_schema(responses={200: OpenApiTypes.OBJECT})
+    @action(detail=False, methods=["get"], url_path="unread-count", pagination_class=None)
+    def unread_count(self, request):
+        # Counts all of this owner's unread messages, whatever the ?unread filter says.
+        count = Enquiry.objects.filter(listing__owner=request.user, is_read=False).count()
+        return Response({"unread": count})
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

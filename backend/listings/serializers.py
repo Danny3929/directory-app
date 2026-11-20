@@ -96,6 +96,18 @@ class EnquirySerializer(serializers.ModelSerializer):
         fields = ["name", "email", "message"]
 
 
+class OwnerEnquirySerializer(serializers.ModelSerializer):
+    """An enquiry as its gym's owner sees it. Everything is read-only: the only
+    change an owner can make is marking it read, through the view's "read" action."""
+    listing_id = serializers.IntegerField(read_only=True)
+    listing_name = serializers.CharField(source="listing.name", read_only=True)
+
+    class Meta:
+        model = Enquiry
+        fields = ["id", "listing_id", "listing_name", "name", "email", "message", "is_read", "created_at"]
+        read_only_fields = fields
+
+
 class OwnerListingSerializer(serializers.ModelSerializer):
     """What an owner sees and may change on their own gym.
 
