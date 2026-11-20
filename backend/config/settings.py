@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "listings",
     "accounts",
+    "billing",
 ]
 
 MIDDLEWARE = [
@@ -170,6 +171,19 @@ SIMPLE_JWT = {
 # The browser may send the cookie to the exact origin above, never to "*".
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [*default_headers, "x-csrftoken"]
+
+# Stripe, test mode only. Both keys come from the environment and never from git.
+# Empty keys are allowed so tests and local work run without Stripe; the checkout
+# endpoint then answers 503 instead of crashing.
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+if STRIPE_SECRET_KEY.startswith(("sk_live_", "rk_live_")):
+    raise ImproperlyConfigured("Live Stripe keys are not allowed: use a test key (sk_test_...).")
+# One fixed price: 30 days on top of the search results for Ksh 500.
+BOOST_PRICE_KSH = 500
+BOOST_DAYS = 30
+# Where Stripe sends the owner back after paying or cancelling.
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Gym Directory API",
