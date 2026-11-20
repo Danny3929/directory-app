@@ -9,7 +9,7 @@ export const MESSAGE_MAX = 2000;
 
 // Something@something.something, with no spaces and only one @.
 // Deliberately simple: the real test of an email is whether a reply arrives.
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Gives { box: 'what to fix' } for every box that is wrong, or {} if all is well.
 export function enquiryErrors({ name = '', email = '', message = '' } = {}) {
