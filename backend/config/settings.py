@@ -78,6 +78,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise serves the admin's CSS and JS on the server (gunicorn does not).
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # CORS must run before CommonMiddleware so it can answer preflight requests.
     "corsheaders.middleware.CorsMiddleware",
@@ -131,9 +133,25 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Owner-uploaded photos. In Task 5 these move to real storage (a server disk is wiped on deploy).
+# Owner-uploaded photos. On a laptop they go in backend/media. On Render the disk
+# is wiped on every deploy, so with CLOUDINARY_URL set they go to Cloudinary.
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+USE_CLOUDINARY = bool(os.environ.get("CLOUDINARY_URL"))
+
+STORAGES = {
+    "default": {
+        "BACKEND": "config.storage.CloudinaryStorage" if USE_CLOUDINARY
+        else "django.core.files.storage.FileSystemStorage",
+    },
+    # On the server: compressed, with a hash in each file name so browsers can cache
+    # them for good. That needs `collectstatic` first, which tests and laptops skip,
+    # so they keep Django's plain storage.
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage" if env_bool("DJANGO_HTTPS")
+        else "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -155,13 +173,33 @@ REST_FRAMEWORK = {
     # Only the enquiry endpoint uses this scope. Counted per visitor IP in the cache.
     # Behind a proxy (Task 5) set NUM_PROXIES, or every visitor looks like the proxy.
     "DEFAULT_THROTTLE_RATES": {"enquiry": "5/hour", "login": "10/hour"},
+    # How many proxies sit in front of Django and add to X-Forwarded-For. Without
+    # it, behind Render every visitor has the proxy's IP and they share one limit.
+    "NUM_PROXIES": int(os.environ["NUM_PROXIES"]) if os.environ.get("NUM_PROXIES") else None,
 }
 
 # When DEBUG is off (a real server), cookies are only sent over HTTPS.
-# HSTS and the HTTPS redirect are set up with the hosting in Task 5.
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+# Set DJANGO_HTTPS=True on the server only (tests and laptops use plain http).
+# Render ends HTTPS at its proxy and tells Django with X-Forwarded-Proto.
+if env_bool("DJANGO_HTTPS"):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    # Health checks from Render come over plain http inside its network.
+    SECURE_REDIRECT_EXEMPT = [r"^api/v1/health/$"]
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365  # browsers use only https for a year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+LOGGING = {
+    # Errors go to the server log (Render shows it), never to the visitor.
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+}
 
 # Tokens live in httpOnly cookies (see accounts/authentication.py).
 SIMPLE_JWT = {

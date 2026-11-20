@@ -247,3 +247,11 @@ Still unwritten: why the first real-browser save failed when 169 tests passed (a
   3. Metadata check off: the other-owner test failed.
   4. Extend from today instead of the current end date: the extend test failed.
   Checkout: removing `owner=request.user` made the other-owner test fail.
+
+## Task 5, step 10: production settings (2026-11-20)
+- WhiteNoise serves the admin's CSS/JS. `CompressedManifestStaticFilesStorage` only when `DJANGO_HTTPS` is set (the server runs `collectstatic`). AI got wrong first: it used `WHITENOISE_MANIFEST_STRICT = False` and claimed tests would work without `collectstatic`; the admin page tests failed with "admin/css/base.css could not be found".
+- Photos go to Cloudinary when `CLOUDINARY_URL` is set (`config/storage.py`, about 40 lines on the official `cloudinary` package). `django-cloudinary-storage` was not used: last release 2020.
+- `DJANGO_HTTPS=True` (server only) turns on the HTTPS redirect, HSTS for a year and Render's `X-Forwarded-Proto`. `/api/v1/health/` is exempt from the redirect for Render's health check. Not tied to `DEBUG`, because tests run with `DEBUG` off over plain http.
+- `NUM_PROXIES` comes from the environment; the right number is checked on Render in step 11.
+- A live Stripe key (`sk_live_`) stops the server starting. Proof: with the check removed, its test failed.
+- `manage.py check --deploy`: 25 warnings down to 1. 24 were the Swagger docs generator (no description of the cookie login, owner views failing without a user, function views without a serializer); fixed with `accounts/schema.py`, `@extend_schema` and a `swagger_fake_view` guard. Left on purpose: **W021 HSTS preload**. Preload is a permanent browser list for a domain we own; `onrender.com` belongs to Render.

@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -24,6 +25,10 @@ class CheckoutRequest(serializers.Serializer):
     listing_id = serializers.IntegerField(min_value=1)
 
 
+@extend_schema(
+    request=CheckoutRequest,
+    responses={201: inline_serializer("CheckoutUrl", {"url": serializers.URLField()})},
+)
 @api_view(["POST"])
 @permission_classes([IsOwnerRole])
 def checkout(request):
@@ -85,4 +90,6 @@ class BillingHistory(generics.ListAPIView):
     pagination_class = ListingPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):  # the docs build has no logged-in user
+            return BoostPurchase.objects.none()
         return BoostPurchase.objects.filter(owner=self.request.user)

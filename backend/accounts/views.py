@@ -15,6 +15,9 @@ from .authentication import (
     enforce_csrf,
     set_auth_cookies,
 )
+from drf_spectacular.utils import extend_schema
+
+from .schema import LOGIN, USER
 from .serializers import RegisterSerializer
 
 
@@ -29,6 +32,7 @@ class LoginThrottle(SimpleRateThrottle):
         return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
 
 
+@extend_schema(request=RegisterSerializer, responses={201: RegisterSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register(request):
@@ -38,6 +42,7 @@ def register(request):
     return Response(serializer.to_representation(user), status=status.HTTP_201_CREATED)
 
 
+@extend_schema(request=LOGIN, responses={200: USER}, description="Sets the gym_access and gym_refresh cookies.")
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @throttle_classes([LoginThrottle])
@@ -57,6 +62,7 @@ def login(request):
     return response
 
 
+@extend_schema(request=None, responses={200: USER}, description="New access cookie from the refresh cookie.")
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def refresh(request):
@@ -79,6 +85,7 @@ def refresh(request):
     return response
 
 
+@extend_schema(request=None, responses={204: None})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def logout(request):
@@ -89,6 +96,7 @@ def logout(request):
     return response
 
 
+@extend_schema(responses={200: USER})
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):

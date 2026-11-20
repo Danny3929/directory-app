@@ -17,7 +17,7 @@ class ListingImageSerializer(serializers.ModelSerializer):
         model = ListingImage
         fields = ["image", "alt_text", "url"]
 
-    def get_url(self, obj):
+    def get_url(self, obj) -> str | None:  # the type hint is for the API docs
         return obj.file.url if obj.file else None
 
 

@@ -107,6 +107,8 @@ class MyListingViewSet(viewsets.ModelViewSet):
     filter_backends = []
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):  # the docs build has no logged-in user
+            return Listing.objects.none()
         return (
             Listing.objects.filter(owner=self.request.user)
             .prefetch_related("tags", "images").order_by("-created_at", "-id")
@@ -170,8 +172,10 @@ class MyEnquiryViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = []
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):  # the docs build has no logged-in user
+            return Enquiry.objects.none()
         # select_related: the gym name comes in the same query, not one per row.
-        qs = Enquiry.objects.filter(listing__owner=self.request.user).select_related("listing")
+        qs =Enquiry.objects.filter(listing__owner=self.request.user).select_related("listing")
         if self.request.query_params.get("unread") in ("1", "true"):
             qs = qs.filter(is_read=False)
         return qs.order_by("-created_at", "-id")
