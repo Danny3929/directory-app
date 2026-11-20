@@ -196,3 +196,11 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Deleting a gym that has enquiries gives 409 `has_enquiries` (PROTECT) instead of a crash. Owners cannot publish or unpublish yet; the dashboard will suggest "unpublish instead" in step 12, which needs an owner-only unpublish action (decide in step 8).
 - Known trade-off: editing a gym that is already published goes live at once, with no re-approval.
 - Proof the tests can fail: listing all gyms in the queryset and letting the client set `is_published` made 4 tests fail.
+
+## Task 4, step 5: owner A vs owner B bypass tests
+Dan was past the deadline and had no time to name the bypasses, so Moss chose them (`backend/listings/tests/test_owner_bypass.py`):
+1. Owner B puts A's gym id in the URL and tries GET, PUT, PATCH, DELETE: all 404, and the gym is unchanged.
+2. Query-string and body tricks (`?owner=`, `?is_published=`, `owner` in the body): the list never widens, and a client-sent `owner` is ignored.
+3. Visitors, anonymous users and the public gym URL: 403 / 401 / read-only.
+Proof they can fail: with the queryset loosened to all gyms, 5 tests failed; with the object permission also set to always-true, the same 5 failed. Both restored; 139 backend tests pass.
+Lesson: bypass 3 stays green in that experiment because it depends on `IsOwnerRole`, a different lock. The queryset filter is the lock that really stops owner B; `IsListingOwner` is the backup, and no test alone isolates it yet.
