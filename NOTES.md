@@ -197,6 +197,16 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Known trade-off: editing a gym that is already published goes live at once, with no re-approval.
 - Proof the tests can fail: listing all gyms in the queryset and letting the client set `is_published` made 4 tests fail.
 
+## Slice notes: enquiries inbox, Task 4 step 8 (2026-11-20)
+- `/me/enquiries/` lists messages to the asker's own gyms (queryset filtered by `listing__owner`), so another owner's enquiry is a 404. Read-only plus `POST .../read/`; PATCH and DELETE give 405, so an owner cannot rewrite a visitor's message. The list uses `select_related`, so the gym name is not one query per row (a test caps the query count).
+- Deleting a gym that has enquiries stays blocked (409, PROTECT): no visitor message is lost. Trade-off: an owner cannot clear out a gym with old enquiries. An owner-only "unpublish" action is still not built; step 12 needs it or the dashboard can only say "ask an admin".
+- Proof the tests can fail: dropping the owner filter made 2 tests fail; counting everyone's unread messages made 1 fail.
+
+## Slice notes: CORS check, Task 4 step 9 (2026-11-20)
+- Allowed origins come from `CORS_ALLOWED_ORIGINS`; credentials are allowed only for those exact origins. `test_cors.py` sends a preflight from a listed and an unlisted origin. Proof it can fail: switching on the allow-every-origin setting made 3 of 4 tests fail (switched back).
+- Trade-off, uploads: two photo uploads sent at the same instant can both see "4 photos" and both pass, giving 6. SQLite cannot lock the row. Fix when on PostgreSQL: `select_for_update()` on the gym inside the transaction, or a unique (gym, position) constraint. Not fixed now because the damage is one extra photo for the owner's own gym.
+- Trade-off, files: uploads sit on the server's disk, which a real host wipes on deploy. Task 5 needs object storage (or a persistent disk).
+
 ## Task 4, step 5: owner A vs owner B bypass tests
 Dan was past the deadline and had no time to name the bypasses, so Moss chose them (`backend/listings/tests/test_owner_bypass.py`):
 1. Owner B puts A's gym id in the URL and tries GET, PUT, PATCH, DELETE: all 404, and the gym is unchanged.

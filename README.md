@@ -114,6 +114,28 @@ Django 6, Django REST Framework, django-filter, django-cors-headers, drf-spectac
 | `GET /health/` | `{"status": "ok"}` |
 | `GET /schema/`, `GET /docs/` | OpenAPI file and Swagger page |
 
+**Accounts and owner endpoints (Task 4)**
+
+Login puts two httpOnly cookies on the browser (`gym_access`, 15 minutes; `gym_refresh`, 7 days). Anything that changes data must also send the `X-CSRFToken` header.
+
+| Method and path | Who | What it does |
+|---|---|---|
+| `POST /auth/register/` | anyone | email, password, role (`visitor` or `owner`); `is_staff` is ignored |
+| `POST /auth/login/` | anyone | sets the cookies; 10 tries an hour per IP; same 401 for a wrong password and an unknown email |
+| `POST /auth/refresh/` | logged in | new access cookie from the refresh cookie |
+| `POST /auth/logout/` | anyone | clears both cookies |
+| `GET /auth/me/` | logged in | who am I, and my role |
+| `GET, POST /me/listings/` | owners | my gyms; new gyms start unpublished until an admin approves them |
+| `GET, PUT, PATCH, DELETE /me/listings/{id}/` | owners | another owner's gym is a 404; a gym with enquiries cannot be deleted (409 `has_enquiries`) |
+| `POST /me/listings/{id}/images/` | owners | one photo: JPEG, PNG or WebP, 2 MB, checked by content, at most 5 per gym |
+| `DELETE /me/listings/{id}/images/{image_id}/` | owners | removes the photo and its file |
+| `GET /me/enquiries/` | owners | messages to my gyms, newest first; `?unread=1` for unread only |
+| `GET /me/enquiries/{id}/` | owners | one message; another owner's is a 404 |
+| `POST /me/enquiries/{id}/read/` | owners | marks it read |
+| `GET /me/enquiries/unread-count/` | owners | `{"unread": N}` |
+
+**CORS:** only the addresses in `CORS_ALLOWED_ORIGINS` may call the API from a browser, and they may send cookies. There is no `*`. Four tests send a real preflight from an allowed and an unlisted origin; switching on the allow-every-origin setting made 3 of them fail.
+
 Only published gyms are shown. Hidden gyms give 404. Every error has the same shape, `{"error": {"code", "message", "fields"}}`, and no stack trace reaches the visitor. The distance and featured rules live in `listings/services.py`, not in the views.
 
 **Settings (environment variables)**
