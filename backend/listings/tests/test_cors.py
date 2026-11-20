@@ -41,3 +41,33 @@ def test_no_wildcard_setting():
     from django.conf import settings as real
     assert not getattr(real, "CORS_ALLOW_ALL_ORIGINS", False)
     assert "*" not in real.CORS_ALLOWED_ORIGINS
+
+
+# --- CSRF check from a different address (found in the real-browser check) ---
+
+def csrf_post(origin):
+    """A logged-in POST from the React app: cookie and header carry the same token."""
+    from django.test import RequestFactory
+    from accounts.authentication import enforce_csrf
+
+    token = "a" * 32
+    factory = RequestFactory(HTTP_ORIGIN=origin, HTTP_X_CSRFTOKEN=token)
+    factory.cookies["csrftoken"] = token
+    enforce_csrf(factory.post(URL, HTTP_HOST="api.example.com"))
+
+
+def test_listed_origin_passes_the_csrf_check(settings):
+    from django.conf import settings as real
+
+    # The real setting must follow the CORS list, otherwise the browser is refused.
+    assert real.CSRF_TRUSTED_ORIGINS == real.CORS_ALLOWED_ORIGINS
+    settings.CSRF_TRUSTED_ORIGINS = [SITE]
+    csrf_post(SITE)  # raises if refused
+
+
+def test_unlisted_origin_fails_the_csrf_check(settings):
+    from rest_framework.exceptions import PermissionDenied
+
+    settings.CSRF_TRUSTED_ORIGINS = [SITE]
+    with pytest.raises(PermissionDenied):
+        csrf_post(STRANGER)

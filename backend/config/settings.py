@@ -138,6 +138,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Only the React app's own addresses may call the API from a browser.
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
+# Django's CSRF check also compares the Origin header with the API's own host. The
+# React app lives on another address, so without this every logged-in POST, PATCH
+# and DELETE from a real browser fails with "Origin checking failed".
+CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 
 REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
