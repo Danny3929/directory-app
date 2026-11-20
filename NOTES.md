@@ -48,7 +48,7 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - `?saved=1` lives in the address like `?q=` and `?zip=`, so Back from a detail page returns to the Saved view.
 - Keyboard checked in a real Chrome (driven through its debugging port): Tab order is search, ZIP, sort, Saved only, then each card's name link and heart. Space and Enter both toggle the heart, and `localStorage` follows (`[8]` then `[]`).
 - Layout checked at a true 390px width: no sideways scroll on the saved view or the detail page.
-- Not tested: a screen reader (only the roles and `aria-pressed` are tested), a real phone, and the gym-gone card on screen (only in tests).
+- Narrator was run on the search form and tags on 2026-11-20 (clear, pacing slightly off, per Dan); cards, detail and saved pages are not covered. Not tested otherwise: a screen reader (only the roles and `aria-pressed` are tested), a real phone, and the gym-gone card on screen (only in tests).
 - Tooling slip: headless Chrome `--window-size=390` crops the picture because Chrome has a minimum window width. Use device emulation instead.
 
 ## Slice notes: gym photos (2026-11-15)

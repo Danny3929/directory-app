@@ -201,7 +201,8 @@ In real Chrome, at phone width (390 px) and on desktop, and on a real Android ph
 - **Reload and shared links:** 11 different addresses (filters, `?page=3`, a broken page number, Min above Max, an unknown ZIP, no results, a load error, a missing gym, a missing page) each looked the same after a reload. None of them scrolled sideways.
 - **Live site:** the home page, `?q=yoga`, `?zip=abc` and a photo file all return 200 on https://directory-app-two.vercel.app (checked 2026-11-20 by request only; the look was not re-checked on a screen).
 - **Screen reader data (2026-11-20):** I printed the accessibility tree Chrome gives a screen reader for the search, gym and saved pages (a small script kept outside this repo). Every box has a label, filter and save buttons say on or off, the result count is announced politely, photos have descriptions, and the enquiry form is a named region. One problem, since fixed: on the search page the headings jumped from level 1 to level 3; they now go 1, 2, and 3 under Similar gyms.
-- **Not checked yet:** listening to a real screen reader (NVDA or Narrator) speak the pages. The tree shows what it is given, not how it sounds.
+- **Narrator check (2026-11-20, partly done):** Windows Narrator read the search page in Chrome while I recorded it and transcribed the recording. It announced every label, the control types (edit, combo box, toggle button) and the tag counts. Dan listened and found the pacing slightly off but clear. Covered only the search form and tags (first 14 Tab stops). A transcript can miss words: "Within" and "Beginner" did not appear in it, so that is unconfirmed.
+- **Not checked yet:** Narrator or NVDA on the gym cards, save buttons, gym detail page and saved page.
 
 ## Accessibility problems found and fixed
 
