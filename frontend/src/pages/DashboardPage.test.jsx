@@ -31,6 +31,13 @@ describe('DashboardPage', () => {
     expect(within(screen.getByText('Acacia Yoga').closest('tr')).getByText('Pending approval')).toBeTruthy();
   });
 
+  it('links to the enquiries inbox', async () => {
+    listMyGyms.mockResolvedValue([]);
+    mount();
+    const link = await screen.findByRole('link', { name: /enquiries inbox/i });
+    expect(link.getAttribute('href')).toBe('/dashboard/enquiries');
+  });
+
   it('says so when there are no gyms', async () => {
     listMyGyms.mockResolvedValue([]);
     mount();

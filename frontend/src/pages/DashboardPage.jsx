@@ -44,7 +44,11 @@ export default function DashboardPage() {
     <main className="page">
       <title>My gyms | Nairobi gyms</title>
       <h1>My gyms</h1>
-      <p><Link to="/dashboard/new">Add a gym</Link></p>
+      <p>
+        <Link to="/dashboard/new">Add a gym</Link>
+        {' · '}
+        <Link to="/dashboard/enquiries">Enquiries inbox</Link>
+      </p>
 
       {banner && <div className="notice notice-error" role="alert"><p>{banner}</p></div>}
 
