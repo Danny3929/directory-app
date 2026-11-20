@@ -40,7 +40,7 @@ def test_list_shape_and_published_only(client):
     row = resp.data["results"][0]
     assert row["slug"] == "alpha"
     assert row["tags"] == [{"name": "Yoga", "slug": "yoga"}]
-    assert row["images"] == [{"image": "a.webp", "alt_text": "Alt"}]
+    assert row["images"] == [{"image": "a.webp", "alt_text": "Alt", "url": None}]
     assert row["distance_km"] is None
     assert "owner" not in row
 

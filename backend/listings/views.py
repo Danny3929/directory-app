@@ -1,11 +1,13 @@
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count, Q
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from django.db.models import ProtectedError
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.decorators import action, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -13,9 +15,10 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from . import services
 from .permissions import IsListingOwner, IsOwnerRole
-from .models import Enquiry, Listing, Tag
+from .models import Enquiry, Listing, ListingImage, Tag
+from .uploads import MAX_BYTES, MAX_PER_GYM, UploadError, check_and_rename
 from .serializers import (
-    EnquirySerializer, ListingSerializer, OwnerListingSerializer, SearchParamsSerializer, TagCountSerializer,
+    EnquirySerializer, ListingSerializer, OwnerImageSerializer, OwnerListingSerializer, SearchParamsSerializer, TagCountSerializer,
 )
 
 
@@ -121,6 +124,39 @@ class MyListingViewSet(viewsets.ModelViewSet):
                 {"error": {"code": "has_enquiries", "message": "This gym has enquiries, so it cannot be deleted."}},
                 status=status.HTTP_409_CONFLICT,
             )
+
+    @action(detail=True, methods=["post"], url_path="images", parser_classes=[MultiPartParser, FormParser])
+    def add_image(self, request, pk=None):
+        """Upload one photo (form field "file", optional "alt_text") to one of my gyms."""
+        gym = self.get_object()  # 404 for another owner's gym
+        # Refuse a huge upload from its header, before reading all of it.
+        if int(request.META.get("CONTENT_LENGTH") or 0) > MAX_BYTES + 100_000:
+            return self._upload_error("too_large", "The photo is larger than 2 MB.", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        upload = request.FILES.get("file")
+        if upload is None:
+            return self._upload_error("no_file", "Choose a photo to upload.")
+        try:
+            safe_file = check_and_rename(upload)
+        except UploadError as exc:
+            return self._upload_error("bad_image", exc.message)
+        alt = request.data.get("alt_text", "")[:200]
+        with transaction.atomic():
+            count = gym.images.count()
+            if count >= MAX_PER_GYM:
+                return self._upload_error("too_many", f"A gym can have at most {MAX_PER_GYM} photos.")
+            image = ListingImage.objects.create(listing=gym, file=safe_file, alt_text=alt, position=count)
+        return Response(OwnerImageSerializer(image).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["delete"], url_path=r"images/(?P<image_id>\d+)")
+    def remove_image(self, request, pk=None, image_id=None):
+        """Remove one of my gym's photos (seeded or uploaded). The file goes with it."""
+        gym = self.get_object()
+        get_object_or_404(gym.images, pk=image_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def _upload_error(code, message, http=status.HTTP_400_BAD_REQUEST):
+        return Response({"error": {"code": code, "message": message}}, status=http)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

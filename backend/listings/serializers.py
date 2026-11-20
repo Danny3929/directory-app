@@ -10,9 +10,22 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class ListingImageSerializer(serializers.ModelSerializer):
+    # Only set for owner uploads; seeded photos use "image" (a file name) as before.
+    url = serializers.SerializerMethodField()
+
     class Meta:
         model = ListingImage
-        fields = ["image", "alt_text"]
+        fields = ["image", "alt_text", "url"]
+
+    def get_url(self, obj):
+        return obj.file.url if obj.file else None
+
+
+class OwnerImageSerializer(ListingImageSerializer):
+    """Same, plus the id an owner needs to remove a photo."""
+
+    class Meta(ListingImageSerializer.Meta):
+        fields = ["id", *ListingImageSerializer.Meta.fields]
 
 
 class ListingSerializer(serializers.ModelSerializer):
@@ -91,7 +104,7 @@ class OwnerListingSerializer(serializers.ModelSerializer):
     tags = serializers.SlugRelatedField(
         many=True, slug_field="slug", queryset=Tag.objects.all(), required=False,
     )
-    images = ListingImageSerializer(many=True, read_only=True)
+    images = OwnerImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Listing
