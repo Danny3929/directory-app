@@ -1,5 +1,7 @@
 # Nairobi gyms directory
 
+[![CI](https://github.com/Danny3929/directory-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Danny3929/directory-app/actions/workflows/ci.yml)
+
 A searchable directory of gyms in and around Nairobi. You can search by name, filter by distance from your ZIP code, tags and monthly price, save favourites, and open a page for each gym with photos, similar gyms and an enquiry form.
 
 This is Tasks 2 and 3 of my Crepton Tech trial (Directory Search UI, then Django REST API). The React frontend in `frontend/` reads its gyms from a Django REST API in `backend/`. The gym data started as a local JSON file and is now loaded into the database with `seed_listings`.
