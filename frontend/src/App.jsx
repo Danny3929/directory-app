@@ -5,6 +5,7 @@ import DetailPage from './pages/DetailPage.jsx';
 import FavouritesPage from './pages/FavouritesPage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
+import GymFormPage from './pages/GymFormPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { useAuth } from './AuthContext.jsx';
 import { loadFavourites, saveFavourites, toggleFavourite } from './lib/favourites.js';
@@ -46,6 +47,8 @@ export default function App() {
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/dashboard" element={<ProtectedRoute role="owner"><DashboardPage /></ProtectedRoute>} />
+        <Route path="/dashboard/new" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
+        <Route path="/dashboard/:id/edit" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

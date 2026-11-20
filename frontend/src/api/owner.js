@@ -17,3 +17,6 @@ export const getMyGym = (id) => apiFetch(`/me/listings/${id}/`);
 export const createMyGym = (details) => apiFetch('/me/listings/', { method: 'POST', body: details });
 export const updateMyGym = (id, details) => apiFetch(`/me/listings/${id}/`, { method: 'PATCH', body: details });
 export const deleteMyGym = (id) => apiFetch(`/me/listings/${id}/`, { method: 'DELETE' });
+
+// The tags a gym can have (a short list, not paged).
+export const listTags = () => apiFetch('/tags/');

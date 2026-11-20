@@ -192,4 +192,13 @@ describe('account links in the nav', () => {
     await vi.waitFor(() => expect(window.location.pathname).toBe('/'));
     expect(logout).toHaveBeenCalled();
   });
+  it('Dashboard link is for owners only', () => {
+    useAuth.mockReturnValue({ user: { email: 'v@x.co', role: 'visitor' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    expect(nav().queryByRole('link', { name: 'Dashboard' })).toBeNull();
+    cleanup();
+    useAuth.mockReturnValue({ user: { email: 'o@x.co', role: 'owner' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    expect(nav().getByRole('link', { name: 'Dashboard' }).getAttribute('href')).toBe('/dashboard');
+  });
 });
