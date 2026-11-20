@@ -179,3 +179,12 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Real-server check found a 500 that was my fault, not the code's: a test server I thought I had stopped was still on port 8031, using the dev database without the new table. Rule: after stopping a server, check the port is free before trusting a new run.
 - Known trade-off: "An account with this email already exists" tells a stranger that email is registered. The guide asks for a unique email, so the message stays; step 3's throttling slows anyone trying many emails.
 - Run `python manage.py migrate` once on your dev database to get the new table.
+
+## Slice notes: login, refresh, me, Task 4 step 3 (2026-11-20)
+- Tokens are set by the server as httpOnly cookies (`gym_access` 15 min, `gym_refresh` 7 days, SameSite=Lax, Secure when DEBUG is off). The login body returns only id, email and role, never a token. The refresh cookie is only sent to `/api/v1/auth/`.
+- CSRF: login also sets the readable `csrftoken` cookie. Every POST/PUT/PATCH/DELETE made with a login cookie must send it back as `X-CSRFToken`, otherwise 403. `/auth/refresh/` and `/auth/logout/` need it too.
+- An expired or forged access cookie counts as logged out, so public pages keep working; protected ones give 401 and the app then calls refresh.
+- Wrong password and unknown email give the same 401 message. Login is limited to 10 tries an hour per IP (needs `NUM_PROXIES` behind a proxy in Task 5).
+- Added `/auth/logout/`, not in the plan text: JavaScript cannot delete an httpOnly cookie, so the server must. Trade-off: without a blacklist, a stolen refresh token stays valid until it expires (7 days).
+- Mistake of mine: my throttle first used `ScopedRateThrottle` with a class attribute; the 11th try still got 401. The throttle test caught it. Fixed with a plain per-IP throttle.
+- Proof the tests can fail: removing the CSRF rejection made 2 tests fail.
