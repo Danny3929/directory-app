@@ -3,6 +3,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from django.db.models import ProtectedError
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.decorators import action, api_view
@@ -11,9 +12,10 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
 from . import services
+from .permissions import IsListingOwner, IsOwnerRole
 from .models import Enquiry, Listing, Tag
 from .serializers import (
-    EnquirySerializer, ListingSerializer, SearchParamsSerializer, TagCountSerializer,
+    EnquirySerializer, ListingSerializer, OwnerListingSerializer, SearchParamsSerializer, TagCountSerializer,
 )
 
 
@@ -89,6 +91,36 @@ class ListingViewSet(viewsets.ReadOnlyModelViewSet):
             {"id": enquiry.pk, "message": f"Thanks, your message was sent to {gym.name}."},
             status=status.HTTP_201_CREATED,
         )
+
+
+class MyListingViewSet(viewsets.ModelViewSet):
+    """An owner's own gyms: list, create, read, edit, delete.
+
+    The queryset is only this owner's gyms, so another owner's id is a 404, not
+    a hint that it exists. New gyms start unpublished until an admin approves."""
+    serializer_class = OwnerListingSerializer
+    pagination_class = ListingPagination
+    permission_classes = [IsOwnerRole, IsListingOwner]
+    filter_backends = []
+
+    def get_queryset(self):
+        return (
+            Listing.objects.filter(owner=self.request.user)
+            .prefetch_related("tags", "images").order_by("-created_at", "-id")
+        )
+
+    def perform_create(self, serializer):
+        # Server-owned fields come from the login and the rules, never the request.
+        serializer.save(owner=self.request.user, is_published=False)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(
+                {"error": {"code": "has_enquiries", "message": "This gym has enquiries, so it cannot be deleted."}},
+                status=status.HTTP_409_CONFLICT,
+            )
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

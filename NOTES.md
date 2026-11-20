@@ -188,3 +188,11 @@ What the AI got wrong, accessibility problems, bugs and their causes. Dan's "Exp
 - Added `/auth/logout/`, not in the plan text: JavaScript cannot delete an httpOnly cookie, so the server must. Trade-off: without a blacklist, a stolen refresh token stays valid until it expires (7 days).
 - Mistake of mine: my throttle first used `ScopedRateThrottle` with a class attribute; the 11th try still got 401. The throttle test caught it. Fixed with a plain per-IP throttle.
 - Proof the tests can fail: removing the CSRF rejection made 2 tests fail.
+
+## Slice notes: owner listings API, Task 4 step 4 (2026-11-20)
+- `/api/v1/me/listings/` (list, create) and `/me/listings/{id}/` (read, edit, delete). Two locks: `IsOwnerRole` (visitors get 403) and a queryset that holds only the asker's gyms, so another owner's id is a 404 and does not reveal the gym exists. `IsListingOwner` is a third check on the object itself.
+- Owner comes from the login; `is_published`, `owner`, `featured_until`, `slug` are ignored if sent. New gyms start unpublished.
+- Price order, latitude and longitude ranges are checked in the serializer, so bad input is a 400 (the database constraint would otherwise be a 500). Also on partial edits.
+- Deleting a gym that has enquiries gives 409 `has_enquiries` (PROTECT) instead of a crash. Owners cannot publish or unpublish yet; the dashboard will suggest "unpublish instead" in step 12, which needs an owner-only unpublish action (decide in step 8).
+- Known trade-off: editing a gym that is already published goes live at once, with no re-approval.
+- Proof the tests can fail: listing all gyms in the queryset and letting the client set `is_published` made 4 tests fail.

@@ -81,3 +81,36 @@ class EnquirySerializer(serializers.ModelSerializer):
     class Meta:
         model = Enquiry
         fields = ["name", "email", "message"]
+
+
+class OwnerListingSerializer(serializers.ModelSerializer):
+    """What an owner sees and may change on their own gym.
+
+    Writable: the gym's details and tags. Never read from the client: owner,
+    is_published, featured_until, slug, images. The view sets owner from the login."""
+    tags = serializers.SlugRelatedField(
+        many=True, slug_field="slug", queryset=Tag.objects.all(), required=False,
+    )
+    images = ListingImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Listing
+        fields = [
+            "id", "slug", "name", "description", "address", "area", "city", "zip_code",
+            "latitude", "longitude", "price_min", "price_max", "tags", "images",
+            "is_published", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "slug", "images", "is_published", "created_at", "updated_at"]
+        extra_kwargs = {
+            "latitude": {"min_value": -90, "max_value": 90},
+            "longitude": {"min_value": -180, "max_value": 180},
+            "price_min": {"max_value": 10_000_000},
+            "price_max": {"max_value": 10_000_000},
+        }
+
+    def validate(self, data):
+        low = data.get("price_min", getattr(self.instance, "price_min", None))
+        high = data.get("price_max", getattr(self.instance, "price_max", None))
+        if low is not None and high is not None and low > high:
+            raise serializers.ValidationError({"price_min": ["Minimum price cannot be above the maximum."]})
+        return data

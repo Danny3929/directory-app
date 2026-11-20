@@ -13,7 +13,7 @@ from rest_framework.views import exception_handler
 
 logger = logging.getLogger(__name__)
 
-CODES = {400: "invalid", 401: "unauthorized", 403: "forbidden", 404: "not_found", 405: "method_not_allowed", 429: "throttled"}
+CODES = {400: "invalid", 401: "unauthorized", 403: "forbidden", 404: "not_found", 405: "method_not_allowed", 409: "conflict", 429: "throttled"}
 
 
 def api_exception_handler(exc, context):
