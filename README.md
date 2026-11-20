@@ -298,3 +298,33 @@ I built this with an AI assistant. Here is where it went wrong and how I noticed
 - Coordinates and prices are invented and were not checked on a map.
 - Each gym has its own card photo, but the gallery photos are shared stock photos. Task 4's uploads will fix this.
 - Distance is "as the crow flies", not by road.
+
+## Task 5: boosts, deployment and secrets
+
+Owners can pay (Stripe **test mode** only) to feature a gym for 30 days. Featured gyms show a badge and sort first.
+
+- **Live backend:** _added after the Render deploy_
+- **Live frontend:** _added after the Vercel deploy_
+
+Only a signature-verified Stripe webhook marks a boost as paid. The success page only asks the server and never decides by itself. The webhook ignores event IDs it has already handled, so a repeat cannot extend a boost twice.
+
+### Environment variables (names only, never values)
+
+| Name | Where | What it is for |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | backend | Django signing key |
+| `DJANGO_DEBUG` | backend | `False` on any server |
+| `DJANGO_ALLOWED_HOSTS` | backend | Hostnames Django answers to |
+| `CORS_ALLOWED_ORIGINS` | backend | Frontend addresses allowed to call the API (also used for CSRF) |
+| `DATABASE_URL` | backend | PostgreSQL on the server; SQLite if left out |
+| `STRIPE_SECRET_KEY` | backend | Stripe **test** key; live keys stop the server starting |
+| `STRIPE_WEBHOOK_SECRET` | backend | Checks the Stripe webhook signature |
+| `FRONTEND_URL` | backend | Where Stripe sends owners back after paying |
+| `DJANGO_HTTPS` | backend, server only | HTTPS redirect, HSTS, proxy header |
+| `NUM_PROXIES` | backend, server only | Proxies in front of Django, for rate limits |
+| `CLOUDINARY_URL` | backend, server only | Photo storage in the cloud |
+| `VITE_API_URL` | frontend | API address the frontend calls |
+
+### Secret scan of the git history
+
+Checked on 2026-11-20 across all 116 commits on all branches: no `sk_live_`, `rk_live_` or real `whsec_` strings and no committed `.env` files. Only `backend/.env.example` and `frontend/.env.example` were ever added (names, no values). The `sk_test_fake` and `whsec_test_fake` strings in the tests are made-up values, marked `# allow-commit-check`. Command used: `git log --all -p -G"(sk_test_|whsec_|rk_live|AKIA)"`.
