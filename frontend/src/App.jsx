@@ -7,6 +7,8 @@ import AuthPage from './pages/AuthPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import GymFormPage from './pages/GymFormPage.jsx';
 import EnquiriesPage from './pages/EnquiriesPage.jsx';
+import BillingPage from './pages/BillingPage.jsx';
+import BoostResultPage from './pages/BoostResultPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { useAuth } from './AuthContext.jsx';
 import { useUnread } from './lib/unread.js';
@@ -50,7 +52,10 @@ export default function App() {
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/dashboard" element={<ProtectedRoute role="owner"><DashboardPage /></ProtectedRoute>} />
         <Route path="/dashboard/enquiries" element={<ProtectedRoute role="owner"><EnquiriesPage /></ProtectedRoute>} />
-        <Route path="/dashboard/new" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
+        <Route path="/dashboard/billing" element={<ProtectedRoute role="owner"><BillingPage /></ProtectedRoute>} />
+        <Route path="/dashboard/boost/success" element={<ProtectedRoute role="owner"><BoostResultPage outcome="success" /></ProtectedRoute>} />
+        <Route path="/dashboard/boost/cancelled" element={<ProtectedRoute role="owner"><BoostResultPage outcome="cancelled" /></ProtectedRoute>} />
+        <Route path="/dashboard/new"element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
         <Route path="/dashboard/:id/edit" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
