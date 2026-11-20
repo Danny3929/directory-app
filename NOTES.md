@@ -226,8 +226,9 @@ Two owners in two separate Chrome profiles (real cookies), backend on port 8020 
 - Not covered: Narrator/NVDA listening, Tab order inside the photo uploader, the admin approve button in a browser. Photos only display when the debug switch is on; with it off the server does not serve `/media/`, a Task 5 item with the file-storage one.
 
 ## Task 4 Explain-it (step 14)
-Questions come from what the browser check found. Answers must be Dan's own words; Moss does not write them for him.
-1. Why does login not enforce the 8-character rule that register does? (Dan: **not yet written**)
-2. Why is the token in an httpOnly cookie, and what attack does that open instead of closing? (README trade-off section has the facts; Dan: **not yet written**)
-3. Why did the first real-browser save fail when 169 tests passed? (Facts: the tests were same-origin and never sent an `Origin` header; fixed by `CSRF_TRUSTED_ORIGINS`.) Dan: **not yet written**
+These are the three questions in the guide's Task 4 section (Moss first wrote different ones by mistake; fixed 2026-11-20). Answers must be Dan's own words; Moss does not write them for him.
+1. What is the difference between authentication and authorization? Point to the code for each. (Dan: **not yet written**)
+2. How does silent token refresh work, and what happens if two requests fail at the same moment? (Facts: the API wrapper in `frontend/src/api/client.js` shares one refresh between both requests; tests in `client.test.js`.) Dan: **not yet written**
+3. Which attack does your token-storage choice defend against, and which does it leave open? (README "Where the login token lives" has the facts.) Dan: **not yet written**
+Extra, from the browser check: why did login skip the 8-character rule, and why did the first real-browser save fail when 169 tests passed? Dan: **not yet written**
 - 2026-11-20: Dashboard links "Add a gym" and "Enquiries inbox" were 21px tall (WCAG 2.2 wants 24px). Cause: inline links ignore `min-height`. Fix: `.dash-links a` is `inline-block` with the 44px `--target-size`. Dev database migrated (accounts 0001, listings 0002).
