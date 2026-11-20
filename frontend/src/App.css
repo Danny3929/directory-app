@@ -703,3 +703,10 @@ button.danger {
   background: var(--color-danger-bg);
   color: var(--color-danger);
 }
+
+/* Enquiries inbox */
+.enquiry-list { list-style: none; padding: 0; display: grid; gap: var(--space-md); }
+.enquiry { padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.enquiry-unread { border-left: 4px solid var(--color-accent); }
+.enquiry-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+.nav-account .badge { margin-left: var(--space-xs); }

@@ -6,8 +6,10 @@ import FavouritesPage from './pages/FavouritesPage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import GymFormPage from './pages/GymFormPage.jsx';
+import EnquiriesPage from './pages/EnquiriesPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { useAuth } from './AuthContext.jsx';
+import { useUnread } from './lib/unread.js';
 import { loadFavourites, saveFavourites, toggleFavourite } from './lib/favourites.js';
 import './App.css';
 
@@ -47,6 +49,7 @@ export default function App() {
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/dashboard" element={<ProtectedRoute role="owner"><DashboardPage /></ProtectedRoute>} />
+        <Route path="/dashboard/enquiries" element={<ProtectedRoute role="owner"><EnquiriesPage /></ProtectedRoute>} />
         <Route path="/dashboard/new" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
         <Route path="/dashboard/:id/edit" element={<ProtectedRoute role="owner"><GymFormPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
@@ -61,6 +64,8 @@ export default function App() {
 function AccountLinks() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const unread = useUnread(user?.role === 'owner', pathname);
   if (loading) return null;
   if (!user) {
     return (
@@ -76,7 +81,13 @@ function AccountLinks() {
   };
   return (
     <span className="nav-account">
-      {user.role === 'owner' && <NavLink to="/dashboard">Dashboard</NavLink>}
+      {user.role === 'owner' && <NavLink to="/dashboard" end>Dashboard</NavLink>}
+      {user.role === 'owner' && (
+        <NavLink to="/dashboard/enquiries">
+          Enquiries
+          {unread > 0 && <span className="badge">{unread}<span className="sr-only"> unread</span></span>}
+        </NavLink>
+      )}
       <span className="nav-user">{user.email}</span>
       <button type="button" onClick={leave}>Log out</button>
     </span>

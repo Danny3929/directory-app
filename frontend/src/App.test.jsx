@@ -9,6 +9,8 @@ import { fetchListings, fetchZips, fetchListing } from './api/listings.js';
 // App only needs to know who is logged in; each test sets what useAuth returns.
 vi.mock('./AuthContext.jsx', () => ({ useAuth: vi.fn() }));
 
+vi.mock('./api/owner.js', () => ({ unreadCount: vi.fn(async () => 2) }));
+
 vi.mock('./api/listings.js', () => ({
   fetchListings: vi.fn(),
   fetchZips: vi.fn(),
@@ -200,5 +202,16 @@ describe('account links in the nav', () => {
     useAuth.mockReturnValue({ user: { email: 'o@x.co', role: 'owner' }, loading: false, logout: vi.fn() });
     openAt('/');
     expect(nav().getByRole('link', { name: 'Dashboard' }).getAttribute('href')).toBe('/dashboard');
+  });
+  it('owner nav shows an Enquiries link with the unread number; visitors see none', async () => {
+    useAuth.mockReturnValue({ user: { email: 'o@x.co', role: 'owner' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    const link = await nav().findByRole('link', { name: /Enquiries/ });
+    expect(link.getAttribute('href')).toBe('/dashboard/enquiries');
+    expect(link.textContent).toMatch(/2\s*unread/);
+    cleanup();
+    useAuth.mockReturnValue({ user: { email: 'v@x.co', role: 'visitor' }, loading: false, logout: vi.fn() });
+    openAt('/');
+    expect(nav().queryByRole('link', { name: /Enquiries/ })).toBeNull();
   });
 });
