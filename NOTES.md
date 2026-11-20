@@ -214,3 +214,13 @@ Dan was past the deadline and had no time to name the bypasses, so Moss chose th
 3. Visitors, anonymous users and the public gym URL: 403 / 401 / read-only.
 Proof they can fail: with the queryset loosened to all gyms, 5 tests failed; with the object permission also set to always-true, the same 5 failed. Both restored; 139 backend tests pass.
 Lesson: bypass 3 stays green in that experiment because it depends on `IsOwnerRole`, a different lock. The queryset filter is the lock that really stops owner B; `IsListingOwner` is the backup, and no test alone isolates it yet.
+
+## Task 4, step 14: browser check on a throwaway database (2026-11-20)
+Two owners in two separate Chrome profiles (real cookies), backend on port 8020 with its own database, frontend on 5180.
+- **Bug the unit tests missed:** the first gym save from a real browser failed with "CSRF check failed". Django also compares the `Origin` header with the API's own host, and the React app is on another address. The tests were same-origin. Fix: `CSRF_TRUSTED_ORIGINS` follows `CORS_ALLOWED_ORIGINS` (`63fd069`). Proof the new test can fail: with the line removed it failed. Cause of the miss: tests use Django's test client, which sends no Origin.
+- Owner B against A's gym, with a valid CSRF token: GET, PATCH, DELETE and photo upload all 404. B's own create ignored `owner` and `is_published` (gym saved as unpublished, owned by B). Note: a raw `fetch` without the CSRF header gives 403 for the wrong reason; always send the header when testing ownership.
+- Uploads: the 4 MB PNG is refused in the browser before sending ("larger than 2 MB"). Sent straight to the API, a 5 MB file gets 413, and random bytes or an .exe named .jpg get 400 "not a valid image". A real 300x200 JPEG uploaded and displayed.
+- Dialogs: the delete dialog opens as a real modal with focus on Cancel, and Escape closes it without deleting.
+- Enquiries: a visitor message with `<b>` and `<script>` shows as plain text. The nav badge read "2 unread", then "1 unread" after Mark as read. Deleting a gym that has enquiries shows "This gym has enquiries, so it cannot be deleted." and the gym stays.
+- Accessibility (automated DOM checks at 390px, not a screen reader): every field has a label, one h1 per page, page titles set, no sideways scroll, empty submit shows 9 errors and moves focus to the first. Small things: the "Add a gym" and "Enquiries inbox" links are 21px tall (WCAG 2.2 asks 24px for stand-alone links).
+- Not covered: Narrator/NVDA listening, Tab order inside the photo uploader, the admin approve button in a browser. Photos only display when the debug switch is on; with it off the server does not serve `/media/`, a Task 5 item with the file-storage one.
